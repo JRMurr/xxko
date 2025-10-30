@@ -4,6 +4,27 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		%sveltekit.head%
+		<script>
+			  try {
+				const mq = window.matchMedia("(prefers-color-scheme: dark)");
+				const saved = localStorage.getItem("theme"); // "light" | "dark" | "system" | null
+				const useSystem = !saved || saved === "system";
+
+				const set = (dark) => {
+				document.documentElement.classList.toggle("dark", dark);
+				};
+
+				// Initial paint
+				set(useSystem ? mq.matches : saved === "dark");
+
+				// If using system, keep following OS changes (works even before Svelte hydrates)
+				if (useSystem) {
+				const onChange = (e) => set(e.matches);
+				mq.addEventListener?.("change", onChange);
+				// no cleanup here; page unload handles it
+				}
+			} catch {}
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
