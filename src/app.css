@@ -2,11 +2,14 @@
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
 
-
 /* App-wide defaults */
 
 /* Make dark mode follow a .dark class on <html> (or any ancestor) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-:root { color-scheme: light dark; } /* nice-to-have for native UI */
-body { @apply bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100; }
+:root {
+	color-scheme: light dark;
+} /* nice-to-have for native UI */
+body {
+	@apply bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100;
+}

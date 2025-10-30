@@ -4,4 +4,9 @@ default:
 
 
 dev:
-    npm run dev -- --open
+  npm run dev -- --open
+
+
+
+format:
+  npm run format

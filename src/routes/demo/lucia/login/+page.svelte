@@ -1,9 +1,9 @@
-<script lang='ts'>
+<script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { ActionData } from './$types';
 
 	let { form }: { form: ActionData } = $props();
-<\/script>
+</script>
 
 <h1>Login/Register</h1>
 <form method="post" action="?/login" use:enhance>
@@ -11,7 +11,7 @@
 		Username
 		<input
 			name="username"
-			class="mt-1 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 		/>
 	</label>
 	<label>
@@ -19,14 +19,16 @@
 		<input
 			type="password"
 			name="password"
-			class="mt-1 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+			class="mt-1 rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
 		/>
 	</label>
-	<button class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-		>Login</button>
+	<button class="rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+		>Login</button
+	>
 	<button
 		formaction="?/register"
-		class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-		>Register</button>
+		class="rounded-md bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+		>Register</button
+	>
 </form>
-<p style='color: red'>{form?.message ?? ''}</p>
+<p style="color: red">{form?.message ?? ''}</p>
