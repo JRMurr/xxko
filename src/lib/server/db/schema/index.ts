@@ -1,2 +1,2 @@
-export * from './auth'
-export * from './match'
+export * from './auth';
+export * from './match';

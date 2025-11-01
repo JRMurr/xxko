@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
+	// TODO: use https://mode-watcher.sveco.dev/docs/components/mode-watcher instead
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
 
 	let { children } = $props();
