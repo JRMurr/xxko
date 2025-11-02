@@ -104,6 +104,8 @@ export const matchSide = sqliteTable(
 	]
 );
 
+// Upto 2 of these rows per side (2 if theres a duo)
+// TODO: For cases where jug/sidekick switches between rounds maybe we could have the same player twice with diff controlledCharId?
 export const matchSidePlayer = sqliteTable(
 	'match_side_player',
 	{
@@ -117,9 +119,6 @@ export const matchSidePlayer = sqliteTable(
 			.references(() => player.id),
 		role: text('role', { enum: PLAYER_ROLE }).notNull(),
 
-		// exactly one row per side has is_point=1 (the point controller)
-		isPoint: integer('is_point', { mode: 'boolean' }).notNull().default(false),
-
 		// which character this player controlled at round start
 		controlledCharId: integer('controlled_char_id')
 			.notNull()
@@ -128,17 +127,11 @@ export const matchSidePlayer = sqliteTable(
 	(t) => [
 		index('idx_side_player_side').on(t.sideId),
 		index('idx_side_player_player').on(t.playerId),
-
-		// cap to at most two rows per side: one 'primary' and one 'co'
 		uniqueIndex('uq_side_role').on(t.sideId, t.role),
 
-		// exactly one point controller per side
-		uniqueIndex('uq_side_point_one')
-			.on(t.sideId)
-			.where(sql`${t.isPoint} = 1`),
-
-		// no double-picking the same character on a side
-		uniqueIndex('uq_side_char_once').on(t.sideId, t.controlledCharId),
+		// TODO: this may or not may not be a good idea
+		// // no double-picking the same character on a side
+		// uniqueIndex('uq_side_char_once').on(t.sideId, t.controlledCharId),
 
 		// check('chk_is_point_bool', sql`${t.isPoint} IN (0,1)`),
 		check('chk_role_enum', sql`${t.role} IN (${join_with_comma(PLAYER_ROLE)})`)
