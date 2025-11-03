@@ -26,20 +26,23 @@ export const team = sqliteTable(
 	'team',
 	{
 		id: integer('id').primaryKey({ autoIncrement: true }),
-		char1Id: integer('char1_id')
+		pointCharId: integer('point_char_id')
 			.notNull()
 			.references(() => character.id),
-		char2Id: integer('char2_id')
+		assistCharId: integer('assist_char_id')
 			.notNull()
 			.references(() => character.id),
-		fuse: text('fuse', { enum: FUSE }).notNull()
+		fuse: text('fuse', { enum: FUSE }).notNull(),
+
+		// If before a round start did the chars swap (mostly matters if jug/sidekick)
+		charSwapBeforeRound: integer('char_swap_before_round', { mode: 'boolean' })
 	},
 	(t) => [
-		uniqueIndex('uq_team_pair').on(t.char1Id, t.char2Id, t.fuse),
-		index('idx_team_chars').on(t.char1Id, t.char2Id),
-		check('chk_fuse', sql`${t.fuse} IN (${join_with_comma(FUSE)})`),
-		// Force a consistent ordering on how to insert chars to avoid dupes by permutation
-		check('chk_team_order', sql`${t.char1Id} < ${t.char2Id}`)
+		uniqueIndex('uq_team_pair').on(t.pointCharId, t.assistCharId, t.fuse, t.charSwapBeforeRound),
+		index('idx_team_chars').on(t.pointCharId, t.assistCharId),
+		check('chk_fuse', sql`${t.fuse} IN (${join_with_comma(FUSE)})`)
+		// // Force a consistent ordering on how to insert chars to avoid dupes by permutation
+		// check('chk_team_order', sql`${t.char1Id} < ${t.char2Id}`)
 	]
 );
 
@@ -71,7 +74,6 @@ export const match = sqliteTable(
 		tStartSec: integer('t_start_sec').notNull(),
 		tEndSec: integer('t_end_sec'),
 		title: text('title'),
-		// seriesId: integer("series_id").references(() => series.id),
 		context: text('context', { enum: MATCH_CONTEXT }),
 		patch: text('patch'),
 		notes: text('notes')
@@ -105,7 +107,6 @@ export const matchSide = sqliteTable(
 );
 
 // Upto 2 of these rows per side (2 if theres a duo)
-// TODO: For cases where jug/sidekick switches between rounds maybe we could have the same player twice with diff controlledCharId?
 export const matchSidePlayer = sqliteTable(
 	'match_side_player',
 	{
@@ -113,16 +114,10 @@ export const matchSidePlayer = sqliteTable(
 		sideId: integer('side_id')
 			.notNull()
 			.references(() => matchSide.id, { onDelete: 'cascade' }),
-
 		playerId: integer('player_id')
 			.notNull()
 			.references(() => player.id),
-		role: text('role', { enum: PLAYER_ROLE }).notNull(),
-
-		// which character this player controlled at round start
-		controlledCharId: integer('controlled_char_id')
-			.notNull()
-			.references(() => character.id)
+		role: text('role', { enum: PLAYER_ROLE }).notNull()
 	},
 	(t) => [
 		index('idx_side_player_side').on(t.sideId),
