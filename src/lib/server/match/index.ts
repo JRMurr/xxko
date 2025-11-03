@@ -1,5 +1,5 @@
 import * as schema from '$lib/server/db/schema';
-import { db } from '$lib/server/db';
+import { type xxDatabase } from '$lib/server/db';
 import { type } from 'arktype';
 import { CHARACTERS, FUSE, type PlayerRole } from '$lib/constants';
 
@@ -110,7 +110,7 @@ export const matchSchema = type({
 
 const ID_RE = /^[a-zA-Z0-9_-]{11}$/;
 
-export const createMatch = (match: typeof matchSchema.infer) =>
+export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 	db.transaction(
 		async (tx) => {
 			// TODO: call out to youtube api to do some level of validation that the link is probably 2xko?
