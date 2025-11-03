@@ -7,7 +7,7 @@ import {
 	FUSE,
 	PLAYER_ROLE,
 	CHARACTERS
-} from '$lib/constants';
+} from '../../../constants';
 import { join_with_comma } from '../utils';
 
 export const player = sqliteTable('player', {

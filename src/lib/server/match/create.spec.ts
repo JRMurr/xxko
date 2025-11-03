@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 import { createMatch, matchSchema } from '.';
+import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { createDbFromClient } from '../db';
 
 // TODO: pull this into a test helper
 export function makeMemoryDb() {
 	const sqlite = new Database(':memory:'); // isolated per test
 	const db = createDbFromClient(sqlite);
+	migrate(db, { migrationsFolder: '../../../../drizzle/' });
 	return {
 		db,
 		sqlite,
