@@ -5,41 +5,32 @@ import {
 	MATCH_CONTEXT,
 	MATCH_SIDE,
 	FUSE,
-	CHARACTERS,
-	PLAYER_ROLE
+	PLAYER_ROLE,
+	CHARACTERS
 } from '$lib/constants';
 import { join_with_comma } from '../utils';
 
 export const player = sqliteTable('player', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
-	handle: text('handle').notNull().unique(),
-	displayName: text('display_name'),
-	region: text('region')
-});
-
-export const character = sqliteTable('character', {
-	id: integer('id').primaryKey({ autoIncrement: true }),
-	name: text('name', { enum: CHARACTERS }).notNull().unique()
+	name: text('name').notNull().unique()
 });
 
 export const team = sqliteTable(
 	'team',
 	{
 		id: integer('id').primaryKey({ autoIncrement: true }),
-		pointCharId: integer('point_char_id')
-			.notNull()
-			.references(() => character.id),
-		assistCharId: integer('assist_char_id')
-			.notNull()
-			.references(() => character.id),
+		pointChar: text('point_char', { enum: CHARACTERS }).notNull(),
+		assistChar: text('assist_char', { enum: CHARACTERS }).notNull(),
 		fuse: text('fuse', { enum: FUSE }).notNull(),
 
 		// If before a round start did the chars swap (mostly matters if jug/sidekick)
 		charSwapBeforeRound: integer('char_swap_before_round', { mode: 'boolean' })
 	},
 	(t) => [
-		uniqueIndex('uq_team_pair').on(t.pointCharId, t.assistCharId, t.fuse, t.charSwapBeforeRound),
-		index('idx_team_chars').on(t.pointCharId, t.assistCharId),
+		uniqueIndex('uq_team_pair').on(t.pointChar, t.assistChar, t.fuse, t.charSwapBeforeRound),
+		index('idx_point').on(t.pointChar),
+		index('idx_assist').on(t.pointChar),
+		index('idx_team_chars').on(t.pointChar, t.assistChar),
 		check('chk_fuse', sql`${t.fuse} IN (${join_with_comma(FUSE)})`)
 		// // Force a consistent ordering on how to insert chars to avoid dupes by permutation
 		// check('chk_team_order', sql`${t.char1Id} < ${t.char2Id}`)
@@ -71,15 +62,15 @@ export const match = sqliteTable(
 		videoId: integer('video_id')
 			.notNull()
 			.references(() => videoSource.id),
-		tStartSec: integer('t_start_sec').notNull(),
-		tEndSec: integer('t_end_sec'),
+		startSec: integer('start_sec').notNull(),
+		endSec: integer('end_sec'),
 		title: text('title'),
 		context: text('context', { enum: MATCH_CONTEXT }),
 		patch: text('patch'),
 		notes: text('notes')
 	},
 	(t) => [
-		uniqueIndex('uq_match_video_start').on(t.videoId, t.tStartSec),
+		uniqueIndex('uq_match_video_start').on(t.videoId, t.startSec),
 		check('chk_context', sql`${t.context} IN (${join_with_comma(MATCH_CONTEXT)})`)
 	]
 );
