@@ -121,15 +121,7 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 				.onConflictDoNothing()
 				.returning({ videoId: schema.videoSource.id });
 
-			const [{ matchId }] = await tx
-				.insert(schema.match)
-				.values({
-					videoId,
-					startSec: 0 // TODO:
-				})
-				.returning({ matchId: schema.match.id });
-
-			const handleSide = async (info: typeof matchSideSchema.infer, side: 'left' | 'right') => {
+			const handleSide = async (info: typeof matchSideSchema.infer) => {
 				const [{ teamId }] = await tx
 					.insert(schema.team)
 					.values(info.team)
@@ -139,8 +131,8 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 				const [{ sideId }] = await tx
 					.insert(schema.matchSide)
 					.values({
-						matchId,
-						side,
+						// matchId,
+						// side,
 						teamId
 					})
 					.returning({ sideId: schema.matchSide.id });
@@ -159,10 +151,22 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 				if (info.assistPlayerName) {
 					await handlePlayer(info.assistPlayerName, 'assist');
 				}
+
+				return sideId;
 			};
 
-			await handleSide(match.left, 'left');
-			await handleSide(match.right, 'right');
+			const leftSideId = await handleSide(match.left);
+			const rightSideId = await handleSide(match.right);
+
+			const [{ matchId }] = await tx
+				.insert(schema.match)
+				.values({
+					leftSideId,
+					rightSideId,
+					videoId,
+					startSec: 0 // TODO:
+				})
+				.returning({ matchId: schema.match.id });
 
 			return matchId;
 		},

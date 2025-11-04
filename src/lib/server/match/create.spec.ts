@@ -41,27 +41,33 @@ afterEach(async () => {
 
 describe('create match', () => {
 	it('create a match', async () => {
+		const url = 'https://www.youtube.com/watch?v=hsP7lO_yz7Q';
+
+		const leftTeam = {
+			pointChar: 'Ahri',
+			assistChar: 'Blitzcrank',
+			fuse: 'DoubleDown'
+		} as const;
+
+		const rightTeam = {
+			pointChar: 'Ekko',
+			assistChar: 'Darius',
+			fuse: 'sidekick',
+			charSwapBeforeRound: true
+		} as const;
+
 		const matchInfo = matchSchema.from({
 			video: {
-				url: 'https://www.youtube.com/watch?v=hsP7lO_yz7Q'
+				url
 			},
 			left: {
 				pointPlayerName: 'leftPad',
-				team: {
-					pointChar: 'Ahri',
-					assistChar: 'Blitzcrank',
-					fuse: 'DoubleDown'
-				}
+				team: leftTeam
 			},
 			right: {
 				pointPlayerName: 'foo',
 				assistPlayerName: 'bar',
-				team: {
-					pointChar: 'Ekko',
-					assistChar: 'Darius',
-					fuse: 'sidekick',
-					charSwapBeforeRound: true
-				}
+				team: rightTeam
 			}
 		});
 
@@ -69,9 +75,20 @@ describe('create match', () => {
 		expect(matchId).toBeDefined();
 
 		const created = await ctx.db.query.match.findFirst({
-			where: (match, { eq }) => eq(match.id, matchId)
+			where: (match, { eq }) => eq(match.id, matchId),
+			with: {
+				leftSide: { columns: { teamId: false }, with: { team: true } },
+				rightSide: { columns: { teamId: false }, with: { team: true } },
+				video: true
+			}
 		});
 
 		expect(created).toBeDefined();
+
+		expect(created?.video.url).toEqual(url);
+		expect(created?.video.externalId).toEqual('hsP7lO_yz7Q');
+
+		expect(created?.leftSide.team).toMatchObject(leftTeam);
+		expect(created?.rightSide.team).toMatchObject(rightTeam);
 	});
 });

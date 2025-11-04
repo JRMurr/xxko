@@ -107,7 +107,11 @@ export const matchSide = sqliteTable(
 );
 
 export const matchSideRelations = relations(matchSide, ({ one }) => ({
-	match: one(match)
+	match: one(match),
+	team: one(team, {
+		fields: [matchSide.teamId],
+		references: [team.id]
+	})
 }));
 
 // Upto 2 of these rows per side (2 if theres a duo)
