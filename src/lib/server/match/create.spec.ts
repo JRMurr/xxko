@@ -3,12 +3,17 @@ import Database from 'better-sqlite3';
 import { createMatch, matchSchema } from '.';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { createDbFromClient } from '../db';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const migrationsFolder = resolve(__dirname, '../../../../drizzle');
 
 // TODO: pull this into a test helper
 export function makeMemoryDb() {
 	const sqlite = new Database(':memory:'); // isolated per test
 	const db = createDbFromClient(sqlite);
-	migrate(db, { migrationsFolder: '../../../../drizzle/' });
+	migrate(db, { migrationsFolder: migrationsFolder });
 	return {
 		db,
 		sqlite,
@@ -24,7 +29,9 @@ beforeEach(() => {
 	ctx = makeMemoryDb();
 });
 afterEach(() => {
-	ctx.reset();
+	if (ctx) {
+		ctx.reset();
+	}
 });
 
 describe('create match', () => {

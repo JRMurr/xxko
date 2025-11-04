@@ -23,7 +23,7 @@ CREATE TABLE `match` (
 	`patch` text,
 	`notes` text,
 	FOREIGN KEY (`video_id`) REFERENCES `video_source`(`id`) ON UPDATE no action ON DELETE no action,
-	CONSTRAINT "chk_context" CHECK("match"."context" IN (?, ?, ?))
+	CONSTRAINT "chk_context" CHECK("match"."context" IN ('ranked', 'casual', 'tournament'))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `uq_match_video_start` ON `match` (`video_id`,`start_sec`);--> statement-breakpoint
@@ -34,7 +34,7 @@ CREATE TABLE `match_side` (
 	`team_id` integer NOT NULL,
 	FOREIGN KEY (`match_id`) REFERENCES `match`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`team_id`) REFERENCES `team`(`id`) ON UPDATE no action ON DELETE no action,
-	CONSTRAINT "chk_side" CHECK("match_side"."side" IN (?, ?))
+	CONSTRAINT "chk_side" CHECK("match_side"."side" IN ('left', 'right'))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `uq_match_side` ON `match_side` (`match_id`,`side`);--> statement-breakpoint
@@ -47,7 +47,7 @@ CREATE TABLE `match_side_player` (
 	`role` text NOT NULL,
 	FOREIGN KEY (`side_id`) REFERENCES `match_side`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`player_id`) REFERENCES `player`(`id`) ON UPDATE no action ON DELETE no action,
-	CONSTRAINT "chk_role_enum" CHECK("match_side_player"."role" IN (?, ?))
+	CONSTRAINT "chk_role_enum" CHECK("match_side_player"."role" IN ('point', 'assist'))
 );
 --> statement-breakpoint
 CREATE INDEX `idx_side_player_side` ON `match_side_player` (`side_id`);--> statement-breakpoint
@@ -65,7 +65,7 @@ CREATE TABLE `team` (
 	`assist_char` text NOT NULL,
 	`fuse` text NOT NULL,
 	`char_swap_before_round` integer,
-	CONSTRAINT "chk_fuse" CHECK("team"."fuse" IN (?, ?, ?, ?, ?))
+	CONSTRAINT "chk_fuse" CHECK("team"."fuse" IN ('juggernaut', 'sidekick', '2xAssist', 'DoubleDown', 'Freestyle'))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `uq_team_pair` ON `team` (`point_char`,`assist_char`,`fuse`,`char_swap_before_round`);--> statement-breakpoint
@@ -77,7 +77,7 @@ CREATE TABLE `video_source` (
 	`platform` text NOT NULL,
 	`external_id` text,
 	`url` text NOT NULL,
-	CONSTRAINT "chk_platform" CHECK("video_source"."platform" IN (?, ?))
+	CONSTRAINT "chk_platform" CHECK("video_source"."platform" IN ('youtube', 'twitch'))
 );
 --> statement-breakpoint
 CREATE INDEX `idx_video_platform` ON `video_source` (`platform`);--> statement-breakpoint

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "62011f2c-59e9-44b9-8d03-168108095773",
+  "id": "faf50664-14b3-435d-855c-96f415787d2a",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "session": {
@@ -185,7 +185,7 @@
       "checkConstraints": {
         "chk_context": {
           "name": "chk_context",
-          "value": "\"match\".\"context\" IN (?, ?, ?)"
+          "value": "\"match\".\"context\" IN ('ranked', 'casual', 'tournament')"
         }
       }
     },
@@ -278,7 +278,7 @@
       "checkConstraints": {
         "chk_side": {
           "name": "chk_side",
-          "value": "\"match_side\".\"side\" IN (?, ?)"
+          "value": "\"match_side\".\"side\" IN ('left', 'right')"
         }
       }
     },
@@ -371,7 +371,7 @@
       "checkConstraints": {
         "chk_role_enum": {
           "name": "chk_role_enum",
-          "value": "\"match_side_player\".\"role\" IN (?, ?)"
+          "value": "\"match_side_player\".\"role\" IN ('point', 'assist')"
         }
       }
     },
@@ -486,7 +486,7 @@
       "checkConstraints": {
         "chk_fuse": {
           "name": "chk_fuse",
-          "value": "\"team\".\"fuse\" IN (?, ?, ?, ?, ?)"
+          "value": "\"team\".\"fuse\" IN ('juggernaut', 'sidekick', '2xAssist', 'DoubleDown', 'Freestyle')"
         }
       }
     },
@@ -552,7 +552,7 @@
       "checkConstraints": {
         "chk_platform": {
           "name": "chk_platform",
-          "value": "\"video_source\".\"platform\" IN (?, ?)"
+          "value": "\"video_source\".\"platform\" IN ('youtube', 'twitch')"
         }
       }
     }

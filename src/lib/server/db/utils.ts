@@ -1,8 +1,6 @@
 import { sql } from 'drizzle-orm';
 
 export const join_with_comma = (vals: readonly string[]) => {
-	return sql.join(
-		vals.map((x) => sql`${x}`),
-		sql`, `
-	);
+	const joined = vals.map((v) => `'${v.replace(/'/g, "''")}'`).join(', ');
+	return sql.raw(joined);
 };
