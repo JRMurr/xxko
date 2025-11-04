@@ -1,36 +1,43 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import Database from 'better-sqlite3';
 import { createMatch, matchSchema } from '.';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { createDbFromClient } from '../db';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tmpdir } from 'node:os';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { createClient } from '@libsql/client';
+import { migrate } from 'drizzle-orm/libsql/migrator';
+import { schema } from 'arktype/internal/keywords/keywords.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const migrationsFolder = resolve(__dirname, '../../../../drizzle');
 
 // TODO: pull this into a test helper
-export function makeMemoryDb() {
-	const sqlite = new Database(':memory:'); // isolated per test
-	const db = createDbFromClient(sqlite);
-	migrate(db, { migrationsFolder: migrationsFolder });
+export async function makeMemoryDb() {
+	const dir = await mkdtemp(join(tmpdir(), 'drizzle-'));
+	const fileUrl = `file:${join(dir, 'test.sqlite')}`;
+
+	const client = createClient({ url: fileUrl });
+	const db = createDbFromClient(client);
+	await migrate(db, { migrationsFolder: migrationsFolder });
 	return {
 		db,
-		sqlite,
-		reset: () => {
-			sqlite.close();
+		fileUrl,
+		cleanup: async () => {
+			await rm(dir, { recursive: true, force: true });
 		}
 	};
 }
 
-let ctx: ReturnType<typeof makeMemoryDb>;
+let ctx: Awaited<ReturnType<typeof makeMemoryDb>>;
 
-beforeEach(() => {
-	ctx = makeMemoryDb();
+beforeEach(async () => {
+	ctx = await makeMemoryDb();
 });
-afterEach(() => {
+afterEach(async () => {
 	if (ctx) {
-		ctx.reset();
+		await ctx.cleanup();
 	}
 });
 
@@ -60,6 +67,13 @@ describe('create match', () => {
 			}
 		});
 
-		await createMatch(ctx.db, matchInfo);
+		const matchId = await createMatch(ctx.db, matchInfo);
+		expect(matchId).toBeDefined();
+
+		const created = await ctx.db.query.match.findFirst({
+			where: (match, { eq }) => eq(match.id, matchId)
+		});
+
+		expect(created).toBeDefined();
 	});
 });

@@ -161,8 +161,10 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 				}
 			};
 
-			handleSide(match.left, 'left');
-			handleSide(match.right, 'right');
+			await handleSide(match.left, 'left');
+			await handleSide(match.right, 'right');
+
+			return matchId;
 		},
 		{ behavior: 'immediate' }
 	);

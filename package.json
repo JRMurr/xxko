@@ -12,6 +12,7 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
+		"eslint": "eslint .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"db:push": "drizzle-kit push",
@@ -31,7 +32,6 @@
 		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/typography": "^0.5.18",
 		"@tailwindcss/vite": "^4.1.13",
-		"@types/better-sqlite3": "^7.6.13",
 		"@types/node": "^22",
 		"@vitest/browser": "^3.2.4",
 		"drizzle-kit": "^0.31.4",
@@ -56,9 +56,9 @@
 		"vitest-browser-svelte": "^1.1.0"
 	},
 	"dependencies": {
+		"@libsql/client": "^0.15.15",
 		"@node-rs/argon2": "^2.0.2",
 		"arktype": "^2.1.25",
-		"better-sqlite3": "^12.4.1",
 		"drizzle-arktype": "^0.1.3"
 	}
 }
