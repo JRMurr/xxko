@@ -131,8 +131,6 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 				const [{ sideId }] = await tx
 					.insert(schema.matchSide)
 					.values({
-						// matchId,
-						// side,
 						teamId
 					})
 					.returning({ sideId: schema.matchSide.id });
@@ -172,6 +170,9 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 		},
 		{ behavior: 'immediate' }
 	);
+
+// TODO: might be interesting to mess with https://orm.drizzle.team/docs/rqb#prepared-statements
+// since we need a db to prepare on might be nice to make a "db" factory that creates the db and gets all prepared statements
 
 export const getMatch = async (db: xxDatabase, matchId: number) => {
 	return db.query.match.findFirst({
