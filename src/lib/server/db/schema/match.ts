@@ -75,6 +75,9 @@ export const match = sqliteTable(
 	]
 );
 
+// TODO: making a relation from match to matchSide is a lil weird since we need to filter on matchSide's side col to join right
+// might be a good idea to flip the relationship so match has a `left` and `right` column
+
 export const matchSide = sqliteTable(
 	'match_side',
 	{
