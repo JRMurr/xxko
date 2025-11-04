@@ -18,27 +18,25 @@ CREATE TABLE `match` (
 	`video_id` integer NOT NULL,
 	`start_sec` integer NOT NULL,
 	`end_sec` integer,
+	`left_side_id` integer NOT NULL,
+	`right_side_id` integer NOT NULL,
 	`title` text,
 	`context` text,
 	`patch` text,
 	`notes` text,
 	FOREIGN KEY (`video_id`) REFERENCES `video_source`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`left_side_id`) REFERENCES `match_side`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`right_side_id`) REFERENCES `match_side`(`id`) ON UPDATE no action ON DELETE no action,
 	CONSTRAINT "chk_context" CHECK("match"."context" IN ('ranked', 'casual', 'tournament'))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `uq_match_video_start` ON `match` (`video_id`,`start_sec`);--> statement-breakpoint
 CREATE TABLE `match_side` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
-	`match_id` integer NOT NULL,
-	`side` text NOT NULL,
 	`team_id` integer NOT NULL,
-	FOREIGN KEY (`match_id`) REFERENCES `match`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`team_id`) REFERENCES `team`(`id`) ON UPDATE no action ON DELETE no action,
-	CONSTRAINT "chk_side" CHECK("match_side"."side" IN ('left', 'right'))
+	FOREIGN KEY (`team_id`) REFERENCES `team`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `uq_match_side` ON `match_side` (`match_id`,`side`);--> statement-breakpoint
-CREATE INDEX `idx_side_match` ON `match_side` (`match_id`);--> statement-breakpoint
 CREATE INDEX `idx_side_team` ON `match_side` (`team_id`);--> statement-breakpoint
 CREATE TABLE `match_side_player` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,

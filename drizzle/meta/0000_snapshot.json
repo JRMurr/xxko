@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "faf50664-14b3-435d-855c-96f415787d2a",
+  "id": "c13c008d-46ea-42ac-a369-9a1b3db52a23",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "session": {
@@ -126,6 +126,20 @@
           "notNull": false,
           "autoincrement": false
         },
+        "left_side_id": {
+          "name": "left_side_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "right_side_id": {
+          "name": "right_side_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "title": {
           "name": "title",
           "type": "text",
@@ -178,6 +192,32 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "match_left_side_id_match_side_id_fk": {
+          "name": "match_left_side_id_match_side_id_fk",
+          "tableFrom": "match",
+          "tableTo": "match_side",
+          "columnsFrom": [
+            "left_side_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "match_right_side_id_match_side_id_fk": {
+          "name": "match_right_side_id_match_side_id_fk",
+          "tableFrom": "match",
+          "tableTo": "match_side",
+          "columnsFrom": [
+            "right_side_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -199,20 +239,6 @@
           "notNull": true,
           "autoincrement": true
         },
-        "match_id": {
-          "name": "match_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "side": {
-          "name": "side",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "team_id": {
           "name": "team_id",
           "type": "integer",
@@ -222,21 +248,6 @@
         }
       },
       "indexes": {
-        "uq_match_side": {
-          "name": "uq_match_side",
-          "columns": [
-            "match_id",
-            "side"
-          ],
-          "isUnique": true
-        },
-        "idx_side_match": {
-          "name": "idx_side_match",
-          "columns": [
-            "match_id"
-          ],
-          "isUnique": false
-        },
         "idx_side_team": {
           "name": "idx_side_team",
           "columns": [
@@ -246,19 +257,6 @@
         }
       },
       "foreignKeys": {
-        "match_side_match_id_match_id_fk": {
-          "name": "match_side_match_id_match_id_fk",
-          "tableFrom": "match_side",
-          "tableTo": "match",
-          "columnsFrom": [
-            "match_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
         "match_side_team_id_team_id_fk": {
           "name": "match_side_team_id_team_id_fk",
           "tableFrom": "match_side",
@@ -275,12 +273,7 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "checkConstraints": {
-        "chk_side": {
-          "name": "chk_side",
-          "value": "\"match_side\".\"side\" IN ('left', 'right')"
-        }
-      }
+      "checkConstraints": {}
     },
     "match_side_player": {
       "name": "match_side_player",

@@ -1,13 +1,6 @@
 import { relations, sql } from 'drizzle-orm';
 import { sqliteTable, integer, text, uniqueIndex, index, check } from 'drizzle-orm/sqlite-core';
-import {
-	VIDEO_PLATFORM,
-	MATCH_CONTEXT,
-	MATCH_SIDE,
-	FUSE,
-	PLAYER_ROLE,
-	CHARACTERS
-} from '../../../constants';
+import { VIDEO_PLATFORM, MATCH_CONTEXT, FUSE, PLAYER_ROLE, CHARACTERS } from '../../../constants';
 import { join_with_comma } from '../utils';
 
 export const player = sqliteTable('player', {
@@ -55,6 +48,10 @@ export const videoSource = sqliteTable(
 	]
 );
 
+export const videoSourceRelations = relations(videoSource, ({ many }) => ({
+	match: many(match)
+}));
+
 export const match = sqliteTable(
 	'match',
 	{
@@ -64,6 +61,12 @@ export const match = sqliteTable(
 			.references(() => videoSource.id),
 		startSec: integer('start_sec').notNull(),
 		endSec: integer('end_sec'),
+		leftSideId: integer('left_side_id')
+			.notNull()
+			.references(() => matchSide.id),
+		rightSideId: integer('right_side_id')
+			.notNull()
+			.references(() => matchSide.id),
 		title: text('title'),
 		context: text('context', { enum: MATCH_CONTEXT }),
 		patch: text('patch'),
@@ -75,30 +78,37 @@ export const match = sqliteTable(
 	]
 );
 
-// TODO: making a relation from match to matchSide is a lil weird since we need to filter on matchSide's side col to join right
-// might be a good idea to flip the relationship so match has a `left` and `right` column
+export const matchRelations = relations(match, ({ one }) => ({
+	video: one(videoSource, {
+		fields: [match.videoId],
+		references: [videoSource.id]
+	}),
+	leftSide: one(matchSide, {
+		relationName: 'leftSide',
+		fields: [match.leftSideId],
+		references: [matchSide.id]
+	}),
+	rightSide: one(matchSide, {
+		relationName: 'rightSide',
+		fields: [match.rightSideId],
+		references: [matchSide.id]
+	})
+}));
 
 export const matchSide = sqliteTable(
 	'match_side',
 	{
 		id: integer('id').primaryKey({ autoIncrement: true }),
-		matchId: integer('match_id')
-			.notNull()
-			.references(() => match.id, { onDelete: 'cascade' }),
-		side: text('side', { enum: MATCH_SIDE }).notNull(),
-
 		teamId: integer('team_id')
 			.notNull()
 			.references(() => team.id)
 	},
-	(t) => [
-		uniqueIndex('uq_match_side').on(t.matchId, t.side),
-		index('idx_side_match').on(t.matchId),
-		index('idx_side_team').on(t.teamId),
-
-		check('chk_side', sql`${t.side} IN (${join_with_comma(MATCH_SIDE)})`)
-	]
+	(t) => [index('idx_side_team').on(t.teamId)]
 );
+
+export const matchSideRelations = relations(matchSide, ({ one }) => ({
+	match: one(match)
+}));
 
 // Upto 2 of these rows per side (2 if theres a duo)
 export const matchSidePlayer = sqliteTable(
@@ -129,52 +139,7 @@ export const matchSidePlayer = sqliteTable(
 	]
 );
 
-// export const matchCompetitor = sqliteTable(
-// 	'match_competitor',
-// 	{
-// 		id: integer('id').primaryKey({ autoIncrement: true }),
-
-// 		matchId: integer('match_id')
-// 			.notNull()
-// 			.references(() => match.id, { onDelete: 'cascade' }),
-
-// 		side: text('side', { enum: MATCH_SIDE }).notNull(),
-
-// 		// Primary player (always present)
-// 		playerId: integer('player_id')
-// 			.notNull()
-// 			.references(() => player.id),
-
-// 		// Optional second player for duo control
-// 		coPlayerId: integer('co_player_id').references(() => player.id),
-
-// 		// Who started on point (must be one of playerId/coPlayerId if provided)
-// 		pointPlayerId: integer('point_player_id').references(() => player.id),
-
-// 		// Team used
-// 		teamId: integer('team_id')
-// 			.notNull()
-// 			.references(() => team.id),
-
-// 		// Who started on point character-wise (nullable if unknown)
-// 		leadCharId: integer('lead_char_id').references(() => character.id)
-// 	},
-// 	(t) => [
-// 		uniqueIndex('uq_match_side').on(t.matchId, t.side),
-
-// 		index('idx_comp_match').on(t.matchId),
-// 		index('idx_comp_player').on(t.playerId),
-// 		index('idx_comp_co_player').on(t.coPlayerId),
-// 		index('idx_comp_point_player').on(t.pointPlayerId),
-// 		index('idx_comp_team').on(t.teamId),
-
-// 		check('chk_side', sql`${t.side} IN (${join_with_comma(MATCH_SIDE)})`),
-
-// 		// duo integrity
-// 		check('chk_duo_distinct', sql`${t.coPlayerId} IS NULL OR ${t.coPlayerId} <> ${t.playerId}`),
-// 		check(
-// 			'chk_point_member',
-// 			sql`${t.pointPlayerId} IS NULL OR ${t.pointPlayerId} IN (${t.playerId}, ${t.coPlayerId})`
-// 		)
-// 	]
-// );
+export const matchSidePlayerRelations = relations(matchSidePlayer, ({ one }) => ({
+	matchSide: one(matchSide, { fields: [matchSidePlayer.sideId], references: [matchSide.id] }),
+	player: one(player, { fields: [matchSidePlayer.playerId], references: [player.id] })
+}));

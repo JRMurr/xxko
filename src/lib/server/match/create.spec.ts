@@ -1,16 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createMatch, matchSchema } from '.';
+import * as schema from '$lib/server/db/schema';
 import { createDbFromClient } from '../db';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createClient } from '@libsql/client';
-import { migrate } from 'drizzle-orm/libsql/migrator';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const migrationsFolder = resolve(__dirname, '../../../../drizzle');
+import { pushSQLiteSchema } from 'drizzle-kit/api';
 
 // TODO: pull this into a test helper
 export async function makeMemoryDb() {
@@ -18,8 +14,11 @@ export async function makeMemoryDb() {
 	const fileUrl = `file:${join(dir, 'test.sqlite')}`;
 
 	const client = createClient({ url: fileUrl });
+
 	const db = createDbFromClient(client);
-	await migrate(db, { migrationsFolder: migrationsFolder });
+	// https://github.com/drizzle-team/drizzle-orm/issues/4205#issue-2890429466
+	const { apply } = await pushSQLiteSchema(schema, db);
+	await apply();
 	return {
 		db,
 		fileUrl,
