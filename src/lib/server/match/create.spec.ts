@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, assert } from 'vitest';
 import { createMatch, getMatch, matchSchema } from '.';
 import * as schema from '$lib/server/db/schema';
 import { createDbFromClient } from '../db';
@@ -76,12 +76,30 @@ describe('create match', () => {
 
 		const created = await getMatch(ctx.db, matchId);
 
-		expect(created).toBeDefined();
+		assert(created);
 
-		expect(created?.video.url).toEqual(url);
-		expect(created?.video.externalId).toEqual('hsP7lO_yz7Q');
+		expect(created.video.url).toEqual(url);
+		expect(created.video.externalId).toEqual('hsP7lO_yz7Q');
 
-		expect(created?.leftSide.team).toMatchObject(leftTeam);
-		expect(created?.rightSide.team).toMatchObject(rightTeam);
+		expect(created.leftSide.team).toMatchObject(leftTeam);
+		expect(created.rightSide.team).toMatchObject(rightTeam);
+
+		assert.sameDeepMembers(created.leftSide.sidePlayers, [
+			{
+				role: 'point',
+				player: { name: 'leftPad' }
+			}
+		]);
+
+		assert.sameDeepMembers(created.rightSide.sidePlayers, [
+			{
+				role: 'point',
+				player: { name: 'foo' }
+			},
+			{
+				role: 'assist',
+				player: { name: 'bar' }
+			}
+		]);
 	});
 });

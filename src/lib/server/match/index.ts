@@ -176,9 +176,26 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 export const getMatch = async (db: xxDatabase, matchId: number) => {
 	return db.query.match.findFirst({
 		where: (match, { eq }) => eq(match.id, matchId),
+		columns: {
+			videoId: false,
+			leftSideId: false,
+			rightSideId: false
+		},
 		with: {
-			leftSide: { columns: { teamId: false }, with: { team: true } },
-			rightSide: { columns: { teamId: false }, with: { team: true } },
+			leftSide: {
+				columns: { teamId: false, id: false },
+				with: {
+					team: true,
+					sidePlayers: { columns: { role: true }, with: { player: { columns: { name: true } } } }
+				}
+			},
+			rightSide: {
+				columns: { teamId: false, id: false },
+				with: {
+					team: true,
+					sidePlayers: { columns: { role: true }, with: { player: { columns: { name: true } } } }
+				}
+			},
 			video: true
 		}
 	});
