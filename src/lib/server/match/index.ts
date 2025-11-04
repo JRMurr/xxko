@@ -168,3 +168,5 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 		},
 		{ behavior: 'immediate' }
 	);
+
+// export const getMatch = (db: xxDatabase, matchId: number) => {};

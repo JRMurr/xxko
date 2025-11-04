@@ -8,7 +8,6 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createClient } from '@libsql/client';
 import { migrate } from 'drizzle-orm/libsql/migrator';
-import { schema } from 'arktype/internal/keywords/keywords.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const migrationsFolder = resolve(__dirname, '../../../../drizzle');
