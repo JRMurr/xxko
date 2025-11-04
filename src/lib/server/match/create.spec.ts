@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { createMatch, matchSchema } from '.';
+import { createMatch, getMatch, matchSchema } from '.';
 import * as schema from '$lib/server/db/schema';
 import { createDbFromClient } from '../db';
 import { tmpdir } from 'node:os';
@@ -74,14 +74,7 @@ describe('create match', () => {
 		const matchId = await createMatch(ctx.db, matchInfo);
 		expect(matchId).toBeDefined();
 
-		const created = await ctx.db.query.match.findFirst({
-			where: (match, { eq }) => eq(match.id, matchId),
-			with: {
-				leftSide: { columns: { teamId: false }, with: { team: true } },
-				rightSide: { columns: { teamId: false }, with: { team: true } },
-				video: true
-			}
-		});
+		const created = await getMatch(ctx.db, matchId);
 
 		expect(created).toBeDefined();
 

@@ -173,4 +173,13 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 		{ behavior: 'immediate' }
 	);
 
-// export const getMatch = (db: xxDatabase, matchId: number) => {};
+export const getMatch = async (db: xxDatabase, matchId: number) => {
+	return db.query.match.findFirst({
+		where: (match, { eq }) => eq(match.id, matchId),
+		with: {
+			leftSide: { columns: { teamId: false }, with: { team: true } },
+			rightSide: { columns: { teamId: false }, with: { team: true } },
+			video: true
+		}
+	});
+};
