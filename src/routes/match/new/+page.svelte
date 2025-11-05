@@ -1,23 +1,27 @@
 <script lang="ts">
 	import SuperDebug, { superForm } from 'sveltekit-superforms';
 	import { Field, Control, Label, Description, FieldErrors, Fieldset, Legend } from 'formsnap';
-	import { arktype } from 'sveltekit-superforms/adapters';
+	import { arktypeClient } from 'sveltekit-superforms/adapters'; // <-- client adapter
 	import { matchSchema } from '$lib/schemas';
 	import { CHARACTERS, FUSE } from '$lib/constants';
 
 	let { data } = $props();
 
-	// const { form, enhance, submitting } = superForm(data.form);
 	const form = superForm(data.form, {
-		validators: arktype(matchSchema),
+		validators: arktypeClient(matchSchema),
 		dataType: 'json'
 	});
-	const { form: formData, enhance } = form;
+	// console.log('form', form);
+	const { form: formData, enhance, message } = form;
 </script>
 
 <h1>Create Match</h1>
+<SuperDebug data={$formData} />
 
 <form use:enhance class="mx-auto flex max-w-3xl flex-col gap-6" method="POST">
+	{#if $message}
+		<div class="message">{$message}</div>
+	{/if}
 	<!-- Video -->
 	<Field {form} name="video.url">
 		<Control>
@@ -188,7 +192,7 @@
 		</Fieldset>
 	</Fieldset>
 
-	<button>Submit</button>
+	<button class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
+		>Submit</button
+	>
 </form>
-m
-<SuperDebug data={$formData} />

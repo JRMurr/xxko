@@ -22,6 +22,7 @@ CREATE TABLE `match` (
 	`right_side_id` integer NOT NULL,
 	`title` text,
 	`context` text,
+	`timestamp` text DEFAULT (current_timestamp) NOT NULL,
 	`patch` text,
 	`notes` text,
 	FOREIGN KEY (`video_id`) REFERENCES `video_source`(`id`) ON UPDATE no action ON DELETE no action,

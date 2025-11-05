@@ -69,6 +69,9 @@ export const match = sqliteTable(
 			.references(() => matchSide.id),
 		title: text('title'),
 		context: text('context', { enum: MATCH_CONTEXT }),
+		created_at: text('timestamp')
+			.notNull()
+			.default(sql`(current_timestamp)`),
 		patch: text('patch'),
 		notes: text('notes')
 	},

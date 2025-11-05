@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, assert } from 'vitest';
-import { createMatch, getMatch, matchSchema } from '.';
+import { createMatch, getMatch } from '.';
 import * as schema from '$lib/server/db/schema';
 import { createDbFromClient } from '../db';
 import { tmpdir } from 'node:os';
@@ -7,6 +7,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { createClient } from '@libsql/client';
 import { pushSQLiteSchema } from 'drizzle-kit/api';
+import { matchSchema } from '$lib/schemas';
 
 // TODO: pull this into a test helper
 export async function makeMemoryDb() {

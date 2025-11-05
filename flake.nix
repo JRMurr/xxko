@@ -24,6 +24,8 @@
               nodeVersion
               # common
               just
+
+              sqlitebrowser
             ];
           };
         };

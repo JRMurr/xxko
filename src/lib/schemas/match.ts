@@ -8,7 +8,7 @@ export const teamSchema = type({
 	pointChar: charSchema,
 	assistChar: charSchema,
 	fuse: fuseSchema,
-	charSwapBeforeRound: 'boolean = false'
+	'charSwapBeforeRound?': 'boolean'
 }).narrow((x, ctx) => {
 	if (x.pointChar === x.assistChar) {
 		return ctx.reject({
@@ -77,9 +77,9 @@ export const extractYouTubeId = (input: string): string | null => {
 	return null;
 };
 
-const videoSchema = type({
-	url: 'string', // TODO: make sure its a valid youtube/twitch link
-	'start_time_sec?': 'number'
+export const videoSchema = type({
+	url: 'string' // TODO: make sure its a valid youtube/twitch link
+	// 'start_time_sec?': 'number'
 }).pipe.try(
 	(x, ctx) => {
 		const id = extractYouTubeId(x.url);
@@ -89,7 +89,8 @@ const videoSchema = type({
 
 		return {
 			externalId: id,
-			url: x.url
+			url: x.url,
+			start_time: 0
 			// TODO: parse start time from url
 		};
 	},

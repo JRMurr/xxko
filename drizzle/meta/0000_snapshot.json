@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "c13c008d-46ea-42ac-a369-9a1b3db52a23",
+  "id": "d86f704b-41c7-4893-ad30-6b4221d883fd",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "session": {
@@ -153,6 +153,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "timestamp": {
+          "name": "timestamp",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(current_timestamp)"
         },
         "patch": {
           "name": "patch",

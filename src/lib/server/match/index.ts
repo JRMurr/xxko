@@ -92,3 +92,19 @@ export const getMatch = async (db: xxDatabase, matchId: number) => {
 		}
 	});
 };
+
+export const getMatches = async (db: xxDatabase, limit: number) => {
+	return db.query.match.findMany({
+		limit,
+		columns: {
+			videoId: false,
+			leftSideId: false,
+			rightSideId: false
+		},
+		with: {
+			leftSide: sideWithClause,
+			rightSide: sideWithClause,
+			video: true
+		}
+	});
+};
