@@ -35,7 +35,7 @@ export const videoSource = sqliteTable(
 	{
 		id: integer('id').primaryKey({ autoIncrement: true }),
 		platform: text('platform', { enum: VIDEO_PLATFORM }).notNull(),
-		externalId: text('external_id'), // id of the video (ie the slug), used mostly for de-dupe so if the link is slightly diff the id would still match
+		externalId: text('external_id').notNull(), // id of the video (ie the slug), used mostly for de-dupe so if the link is slightly diff the id would still match
 		url: text('url').notNull() // full url for the video
 		// channel: text("channel"),
 		// uploadedAt: text("uploaded_at"),

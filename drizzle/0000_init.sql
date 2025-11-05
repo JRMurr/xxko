@@ -74,7 +74,7 @@ CREATE INDEX `idx_team_chars` ON `team` (`point_char`,`assist_char`);--> stateme
 CREATE TABLE `video_source` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`platform` text NOT NULL,
-	`external_id` text,
+	`external_id` text NOT NULL,
 	`url` text NOT NULL,
 	CONSTRAINT "chk_platform" CHECK("video_source"."platform" IN ('youtube', 'twitch'))
 );

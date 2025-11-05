@@ -57,10 +57,8 @@ describe('create match', () => {
 			charSwapBeforeRound: true
 		} as const;
 
-		const matchInfo = matchSchema.from({
-			video: {
-				url
-			},
+		const matchInfo = matchSchema.parse({
+			video: url,
 			left: {
 				pointPlayerName: 'leftPad',
 				team: leftTeam

@@ -2,18 +2,18 @@ import { createMatch } from '$lib/server/match';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, message } from 'sveltekit-superforms';
-import { arktype } from 'sveltekit-superforms/adapters';
+import { zod4 } from 'sveltekit-superforms/adapters';
 import { matchSchema } from '$lib/schemas';
 
 export const load: PageServerLoad = async () => {
 	// Build an empty form from the schema for initial render
-	const form = await superValidate(arktype(matchSchema));
+	const form = await superValidate(zod4(matchSchema));
 	return { form };
 };
 
 export const actions = {
 	default: async (event) => {
-		const form = await superValidate(event, arktype(matchSchema));
+		const form = await superValidate(event, zod4(matchSchema));
 		if (!form.valid) {
 			return fail(400, { form });
 		}

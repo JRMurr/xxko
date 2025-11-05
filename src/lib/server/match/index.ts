@@ -1,20 +1,28 @@
 import * as schema from '$lib/server/db/schema';
 import { type xxDatabase } from '$lib/server/db';
-import { matchSchema, matchSideSchema } from '$lib/schemas';
+import { extractYouTubeId, matchSchema, matchSideSchema } from '$lib/schemas';
 import type { PlayerRole } from '$lib/constants';
+import type z from 'zod';
 
-export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
+export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) =>
 	db.transaction(
 		async (tx) => {
 			// TODO: call out to youtube api to do some level of validation that the link is probably 2xko?
 			// TODO: twitch support
+
+			const videoInfo = {
+				url: match.video,
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				externalId: extractYouTubeId(match.video)!
+			};
+
 			const [{ videoId }] = await tx
 				.insert(schema.videoSource)
-				.values({ ...match.video, platform: 'youtube' })
+				.values({ ...videoInfo, platform: 'youtube' })
 				.onConflictDoNothing()
 				.returning({ videoId: schema.videoSource.id });
 
-			const handleSide = async (info: typeof matchSideSchema.infer) => {
+			const handleSide = async (info: z.infer<typeof matchSideSchema>) => {
 				const [{ teamId }] = await tx
 					.insert(schema.team)
 					.values(info.team)

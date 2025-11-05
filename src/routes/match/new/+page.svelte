@@ -1,17 +1,16 @@
 <script lang="ts">
 	import SuperDebug, { superForm } from 'sveltekit-superforms';
 	import { Field, Control, Label, Description, FieldErrors, Fieldset, Legend } from 'formsnap';
-	import { arktypeClient } from 'sveltekit-superforms/adapters'; // <-- client adapter
+	import { zod4Client } from 'sveltekit-superforms/adapters'; // <-- client adapter
 	import { matchSchema } from '$lib/schemas';
 	import { CHARACTERS, FUSE } from '$lib/constants';
 
 	let { data } = $props();
 
 	const form = superForm(data.form, {
-		validators: arktypeClient(matchSchema),
+		validators: zod4Client(matchSchema),
 		dataType: 'json'
 	});
-	// console.log('form', form);
 	const { form: formData, enhance, message } = form;
 </script>
 

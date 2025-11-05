@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "d86f704b-41c7-4893-ad30-6b4221d883fd",
+  "id": "5a0bad57-12a4-4ce6-afcf-4f8f6165b901",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "session": {
@@ -512,7 +512,7 @@
           "name": "external_id",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
+          "notNull": true,
           "autoincrement": false
         },
         "url": {
