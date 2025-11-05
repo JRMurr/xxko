@@ -1,8 +1,9 @@
-import { createMatch, matchSchema } from '$lib/server/match';
-import { fail, redirect } from '@sveltejs/kit';
+import { createMatch } from '$lib/server/match';
+import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, message } from 'sveltekit-superforms';
 import { arktype } from 'sveltekit-superforms/adapters';
+import { matchSchema } from '$lib/schemas';
 
 export const load: PageServerLoad = async () => {
 	// Build an empty form from the schema for initial render
@@ -11,24 +12,27 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions = {
-	default: async ({ request, locals }) => {
-		const form = await superValidate(request, arktype(matchSchema));
+	default: async (event) => {
+		const form = await superValidate(event, arktype(matchSchema));
 		if (!form.valid) {
 			return fail(400, { form });
 		}
 
 		try {
-			const match = await createMatch(locals.db, form.data);
+			await createMatch(event.locals.db, form.data);
 
 			// Option 1: redirect to detail page (classic post/redirect/get)
 			// throw redirect(303, `/widgets/${widget.id}`);
 
 			// Option 2: keep user on page and show a success flash (AJAX-friendly)
-			// return message(form, 'Created!', { status: 201 });
-			// return { form };
-		} catch (e: any) {
+			return message(form, 'Created!');
+		} catch (e: unknown) {
 			// Attach a top-level error message
-			return message(form, e?.message ?? 'Something went wrong', { status: 500 });
+			let msgText = 'something went wrong';
+			if (e instanceof Error) {
+				msgText = e.message;
+			}
+			return message(form, msgText, { status: 500 });
 		}
 	}
 } satisfies Actions;
