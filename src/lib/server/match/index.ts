@@ -174,6 +174,16 @@ export const createMatch = (db: xxDatabase, match: typeof matchSchema.infer) =>
 // TODO: might be interesting to mess with https://orm.drizzle.team/docs/rqb#prepared-statements
 // since we need a db to prepare on might be nice to make a "db" factory that creates the db and gets all prepared statements
 
+type MachQueryWith = NonNullable<Parameters<xxDatabase['query']['match']['findFirst']>[0]>['with'];
+
+const sideWithClause = {
+	columns: { teamId: false, id: false },
+	with: {
+		team: true,
+		sidePlayers: { columns: { role: true }, with: { player: { columns: { name: true } } } }
+	}
+} satisfies NonNullable<MachQueryWith>['leftSide'];
+
 export const getMatch = async (db: xxDatabase, matchId: number) => {
 	return db.query.match.findFirst({
 		where: (match, { eq }) => eq(match.id, matchId),
@@ -183,20 +193,8 @@ export const getMatch = async (db: xxDatabase, matchId: number) => {
 			rightSideId: false
 		},
 		with: {
-			leftSide: {
-				columns: { teamId: false, id: false },
-				with: {
-					team: true,
-					sidePlayers: { columns: { role: true }, with: { player: { columns: { name: true } } } }
-				}
-			},
-			rightSide: {
-				columns: { teamId: false, id: false },
-				with: {
-					team: true,
-					sidePlayers: { columns: { role: true }, with: { player: { columns: { name: true } } } }
-				}
-			},
+			leftSide: sideWithClause,
+			rightSide: sideWithClause,
 			video: true
 		}
 	});
