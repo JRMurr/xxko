@@ -26,7 +26,7 @@
 				<input {...props} placeholder="https://youtu.be/..." bind:value={$formData.video.url} />
 			{/snippet}
 		</Control>
-		<Description>We’ll extract the ID; shorts/embed links are fine.</Description>
+		<Description>We'll extract the ID; shorts/embed links are fine.</Description>
 		<FieldErrors />
 	</Field>
 
