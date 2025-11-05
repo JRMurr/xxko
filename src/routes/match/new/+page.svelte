@@ -22,11 +22,11 @@
 		<div class="message">{$message}</div>
 	{/if}
 	<!-- Video -->
-	<Field {form} name="video.url">
+	<Field {form} name="video">
 		<Control>
 			{#snippet children({ props })}
 				<Label>YouTube URL</Label>
-				<input {...props} placeholder="https://youtu.be/..." bind:value={$formData.video.url} />
+				<input {...props} placeholder="https://youtu.be/..." bind:value={$formData.video} />
 			{/snippet}
 		</Control>
 		<Description>We'll extract the ID; shorts/embed links are fine.</Description>
