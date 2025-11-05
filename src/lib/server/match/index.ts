@@ -95,6 +95,7 @@ export const getMatch = async (db: xxDatabase, matchId: number) => {
 
 export const getMatches = async (db: xxDatabase, limit: number) => {
 	return db.query.match.findMany({
+		orderBy: (match, { desc }) => [desc(match.created_at)],
 		limit,
 		columns: {
 			videoId: false,
