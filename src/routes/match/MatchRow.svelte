@@ -1,30 +1,20 @@
 <!-- src/lib/components/MatchRow.svelte -->
 <script lang="ts">
 	import type { CombinedMatchInfo } from '$lib/server/match';
+	import { charImages } from '$lib/assets/charImages';
 
-	type Side = CombinedMatchInfo['leftSide'];
-	type Team = Side['team'];
+	type MatchSide = CombinedMatchInfo['leftSide'];
+	type Team = MatchSide['team'];
 	type VideoSource = CombinedMatchInfo['video'];
 
 	let props = $props();
 
 	const match: CombinedMatchInfo = props.match;
 
-	function playersLabel(side: CombinedMatchInfo['leftSide']) {
-		// Show up to 2 players, including role if you like
-		// Example: "Alice (POINT) · Bob (ASSIST)"
+	function playersInline(side: MatchSide) {
 		return side.sidePlayers
-			.map((sp) => `${sp.player.name}${sp.role ? ` (${sp.role})` : ''}`)
-			.join(' · ');
-	}
-
-	function charsLabel(team: Team) {
-		const swap = team.charSwapBeforeRound ? ' ↔︎' : '';
-		return `${team.pointChar} + ${team.assistChar}${swap}`;
-	}
-
-	function fuseLabel(team: Team) {
-		return team.fuse;
+			.map((sp) => (sp.role ? `${sp.player.name} (${sp.role})` : sp.player.name))
+			.join(', ');
 	}
 
 	function formatSpan(start?: number, end?: number | null) {
@@ -32,6 +22,9 @@
 		if (!end && end !== 0) return `@${start}s`;
 		const dur = Math.max(0, (end ?? start) - start);
 		return `@${start}s • ${dur}s`;
+	}
+	function fuseLabel(team: Team) {
+		return team.fuse;
 	}
 
 	function videoJumpUrl(v: VideoSource, start: number) {
@@ -56,54 +49,91 @@
 		window.open(videoJumpUrl(match.video, match.startSec), '_blank');
 		return;
 	}
+
+	const charSrc = (name: keyof typeof charImages) => charImages[name];
 </script>
 
 <button
-	class="group hover:bg-muted/60 grid w-full cursor-pointer grid-cols-[auto,1fr,auto,1fr,auto] items-center gap-3 rounded-2xl px-3 py-2"
+	type="button"
+	class="group hover:bg-muted/60 focus:ring-ring flex w-full items-center gap-3 rounded-xl px-3 py-2 focus:ring-2 focus:outline-none"
 	onclick={handleClick}
 	aria-label={`Open match ${match.title ?? ''}`}
 >
-	<!-- LEFT SIDE -->
-	<div class="min-w-0">
-		<div class="flex flex-wrap items-center gap-1 text-sm font-medium">
-			<span class="rounded-full border px-2 py-0.5 text-xs">{charsLabel(match.leftSide.team)}</span>
-			<span class="rounded-full border px-2 py-0.5 text-xs"
-				>Fuse: {fuseLabel(match.leftSide.team)}</span
-			>
+	<!-- LEFT: chars + fuse + players -->
+	<div class="flex min-w-0 items-center gap-2">
+		<div class="flex shrink-0 items-center gap-1">
+			<img
+				src={charSrc(match.leftSide.team.pointChar)}
+				alt={match.leftSide.team.pointChar}
+				title={match.leftSide.team.pointChar}
+				class="h-5 w-5 rounded object-contain"
+				loading="lazy"
+			/>
+			<img
+				src={charSrc(match.leftSide.team.assistChar)}
+				alt={match.leftSide.team.assistChar}
+				title={match.leftSide.team.assistChar}
+				class="h-5 w-5 rounded object-contain"
+				loading="lazy"
+			/>
+			{#if match.leftSide.team.charSwapBeforeRound}
+				<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
+			{/if}
+			<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
+				{match.leftSide.team.fuse}
+			</span>
 		</div>
-		<div class="text-muted-foreground truncate text-sm">
-			{playersLabel(match.leftSide)}
-		</div>
+
+		<span class="text-muted-foreground truncate text-sm" title={playersInline(match.leftSide)}>
+			{playersInline(match.leftSide)}
+		</span>
 	</div>
 
 	<!-- VS -->
-	<div class="mx-2 text-center text-sm font-semibold opacity-70 select-none">vs</div>
+	<span class="mx-1 shrink-0 text-xs font-semibold opacity-70">vs</span>
 
-	<!-- RIGHT SIDE -->
-	<div class="min-w-0 text-right">
-		<div class="flex flex-wrap items-center justify-end gap-1 text-sm font-medium">
-			<span class="rounded-full border px-2 py-0.5 text-xs"
-				>Fuse: {fuseLabel(match.rightSide.team)}</span
-			>
-			<span class="rounded-full border px-2 py-0.5 text-xs">{charsLabel(match.rightSide.team)}</span
-			>
-		</div>
-		<div class="text-muted-foreground truncate text-sm">
-			{playersLabel(match.rightSide)}
+	<!-- RIGHT: players + fuse + chars (mirrored) -->
+	<div class="ml-auto flex min-w-0 items-center gap-2">
+		<span
+			class="text-muted-foreground truncate text-right text-sm"
+			title={playersInline(match.rightSide)}
+		>
+			{playersInline(match.rightSide)}
+		</span>
+
+		<div class="flex shrink-0 items-center gap-1">
+			<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
+				{match.rightSide.team.fuse}
+			</span>
+			{#if match.rightSide.team.charSwapBeforeRound}
+				<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
+			{/if}
+			<img
+				src={charSrc(match.rightSide.team.assistChar)}
+				alt={match.rightSide.team.assistChar}
+				title={match.rightSide.team.assistChar}
+				class="h-5 w-5 rounded object-contain"
+				loading="lazy"
+			/>
+			<img
+				src={charSrc(match.rightSide.team.pointChar)}
+				alt={match.rightSide.team.pointChar}
+				title={match.rightSide.team.pointChar}
+				class="h-5 w-5 rounded object-contain"
+				loading="lazy"
+			/>
 		</div>
 	</div>
 
-	<!-- META -->
-	<div class="hidden flex-col items-end gap-0.5 pl-2 text-right md:flex">
+	<!-- META (right edge, small screens hide most) -->
+	<div class="text-muted-foreground hidden items-center gap-2 pl-2 text-xs md:flex">
 		{#if match.title}
-			<div class="max-w-[22ch] truncate text-sm">{match.title}</div>
+			<span class="text-foreground/90 hidden max-w-[28ch] truncate align-middle text-sm lg:inline"
+				>{match.title}</span
+			>
 		{/if}
-		<div class="text-muted-foreground flex items-center gap-2 text-xs">
-			{#if match.video?.platform}
-				<span class="tracking-wide uppercase">{match.video.platform}</span>
-			{/if}
-			<span>{formatSpan(match.startSec, match.endSec)}</span>
-		</div>
+		<span class="tracking-wide uppercase">{match.video.platform}</span>
+		<span>{formatSpan(match.startSec, match.endSec)}</span>
 	</div>
 </button>
 
