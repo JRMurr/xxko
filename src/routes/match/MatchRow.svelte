@@ -55,7 +55,7 @@
 
 <button
 	type="button"
-	class="group hover:bg-muted/60 focus:ring-ring flex w-full items-center gap-3 rounded-xl px-3 py-2 focus:ring-2 focus:outline-none"
+	class="group hover:bg-muted/60 focus:ring-ring flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-base focus:ring-2 focus:outline-none"
 	onclick={handleClick}
 	aria-label={`Open match ${match.title ?? ''}`}
 >
@@ -66,25 +66,28 @@
 				src={charSrc(match.leftSide.team.pointChar)}
 				alt={match.leftSide.team.pointChar}
 				title={match.leftSide.team.pointChar}
-				class="h-5 w-5 rounded object-contain"
+				class="h-8 w-8 rounded-lg object-contain"
 				loading="lazy"
 			/>
 			<img
 				src={charSrc(match.leftSide.team.assistChar)}
 				alt={match.leftSide.team.assistChar}
 				title={match.leftSide.team.assistChar}
-				class="h-5 w-5 rounded object-contain"
+				class="h-8 w-8 rounded-lg object-contain"
 				loading="lazy"
 			/>
 			{#if match.leftSide.team.charSwapBeforeRound}
 				<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
 			{/if}
-			<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
+			<span class="inline-flex items-center rounded-md border px-2 py-0.5 text-sm leading-none">
 				{match.leftSide.team.fuse}
 			</span>
 		</div>
 
-		<span class="text-muted-foreground truncate text-sm" title={playersInline(match.leftSide)}>
+		<span
+			class="text-muted-foreground truncate text-base font-medium"
+			title={playersInline(match.leftSide)}
+		>
 			{playersInline(match.leftSide)}
 		</span>
 	</div>
