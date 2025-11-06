@@ -85,6 +85,8 @@ const sideWithClause = {
 	}
 } satisfies NonNullable<MachQueryWith>['leftSide'];
 
+export type CombinedMatchInfo = NonNullable<Awaited<ReturnType<typeof getMatch>>>;
+
 export const getMatch = async (db: xxDatabase, matchId: number) => {
 	return db.query.match.findFirst({
 		where: (match, { eq }) => eq(match.id, matchId),
@@ -101,7 +103,7 @@ export const getMatch = async (db: xxDatabase, matchId: number) => {
 	});
 };
 
-export const getMatches = async (db: xxDatabase, limit: number) => {
+export const getMatches = async (db: xxDatabase, limit: number): Promise<CombinedMatchInfo[]> => {
 	return db.query.match.findMany({
 		orderBy: (match, { desc }) => [desc(match.created_at)],
 		limit,

@@ -1,7 +1,13 @@
 <script lang="ts">
-	let { data } = $props();
+	import MatchRow from './MatchRow.svelte';
 
-	console.log(data);
+	const { data } = $props();
+
+	const { matches } = data;
 </script>
 
-<div>pog</div>
+<div class="flex flex-col divide-y">
+	{#each matches as m}
+		<MatchRow match={m} />
+	{/each}
+</div>

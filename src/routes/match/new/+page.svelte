@@ -23,7 +23,7 @@
 	{#if $message}
 		<div class="message">{$message}</div>
 	{/if}
-	<!-- Video -->
+
 	<Field {form} name="video">
 		<Control>
 			{#snippet children({ props })}
