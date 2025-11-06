@@ -3,7 +3,7 @@
 	import { Field, Control, Label, Description, FieldErrors, Fieldset, Legend } from 'formsnap';
 	import { zod4Client } from 'sveltekit-superforms/adapters'; // <-- client adapter
 	import { matchSchema } from '$lib/schemas';
-	import { CHARACTERS, FUSE } from '$lib/constants';
+	import { CHARACTERS, FUSE, MATCH_SIDE } from '$lib/constants';
 
 	let { data } = $props();
 
@@ -12,6 +12,8 @@
 		dataType: 'json'
 	});
 	const { form: formData, enhance, message } = form;
+
+	const sideLabel = (s: (typeof MATCH_SIDE)[number]) => (s === 'left' ? 'Left Side' : 'Right Side');
 </script>
 
 <h1>Create Match</h1>
@@ -33,163 +35,85 @@
 		<FieldErrors />
 	</Field>
 
-	<!-- Left side -->
-	<Fieldset {form} name="left">
-		<Legend>Left Side</Legend>
+	{#each MATCH_SIDE as side}
+		<Fieldset {form} name={side}>
+			<Legend>{sideLabel(side)}</Legend>
 
-		<Field {form} name="left.pointPlayerName">
-			<Control>
-				{#snippet children({ props })}
-					<Label>Point Player</Label>
-					<input {...props} bind:value={$formData.left.pointPlayerName} />
-				{/snippet}
-			</Control>
-			<FieldErrors />
-		</Field>
-
-		<Field {form} name="left.assistPlayerName">
-			<Control>
-				{#snippet children({ props })}
-					<Label>Assist Player (optional)</Label>
-					<input {...props} bind:value={$formData.left.assistPlayerName} />
-				{/snippet}
-			</Control>
-			<FieldErrors />
-		</Field>
-
-		<Fieldset {form} name="left.team">
-			<Legend>Left Team</Legend>
-
-			<Field {form} name="left.team.pointChar">
+			<Field {form} name={`${side}.pointPlayerName`}>
 				<Control>
 					{#snippet children({ props })}
-						<Label>Point Char</Label>
-						<select {...props} bind:value={$formData.left.team.pointChar}>
-							{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
-						</select>
+						<Label>Point Player</Label>
+						<input {...props} bind:value={$formData[side].pointPlayerName} />
 					{/snippet}
 				</Control>
 				<FieldErrors />
 			</Field>
 
-			<Field {form} name="left.team.assistChar">
+			<Field {form} name={`${side}.assistPlayerName`}>
 				<Control>
 					{#snippet children({ props })}
-						<Label>Assist Char</Label>
-						<select {...props} bind:value={$formData.left.team.assistChar}>
-							{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
-						</select>
+						<Label>Assist Player (optional)</Label>
+						<input {...props} bind:value={$formData[side].assistPlayerName} />
 					{/snippet}
 				</Control>
 				<FieldErrors />
 			</Field>
 
-			<Field {form} name="left.team.fuse">
-				<Control>
-					{#snippet children({ props })}
-						<Label>Fuse</Label>
-						<select {...props} bind:value={$formData.left.team.fuse}>
-							{#each FUSE as f}<option value={f}>{f}</option>{/each}
-						</select>
-					{/snippet}
-				</Control>
-				<FieldErrors />
-			</Field>
+			<Fieldset {form} name={`${side}.team`}>
+				<Legend>{sideLabel(side)} Team</Legend>
 
-			<Field {form} name="left.team.charSwapBeforeRound">
-				<Control>
-					{#snippet children({ props })}
-						<input
-							{...props}
-							type="checkbox"
-							bind:checked={$formData.left.team.charSwapBeforeRound}
-						/>
-						<Label>Char swap before round</Label>
-					{/snippet}
-				</Control>
-				<FieldErrors />
-			</Field>
+				<Field {form} name={`${side}.team.pointChar`}>
+					<Control>
+						{#snippet children({ props })}
+							<Label>Point Char</Label>
+							<select {...props} bind:value={$formData[side].team.pointChar}>
+								{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
+							</select>
+						{/snippet}
+					</Control>
+					<FieldErrors />
+				</Field>
+
+				<Field {form} name={`${side}.team.assistChar`}>
+					<Control>
+						{#snippet children({ props })}
+							<Label>Assist Char</Label>
+							<select {...props} bind:value={$formData[side].team.assistChar}>
+								{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
+							</select>
+						{/snippet}
+					</Control>
+					<FieldErrors />
+				</Field>
+
+				<Field {form} name={`${side}.team.fuse`}>
+					<Control>
+						{#snippet children({ props })}
+							<Label>Fuse</Label>
+							<select {...props} bind:value={$formData[side].team.fuse}>
+								{#each FUSE as f}<option value={f}>{f}</option>{/each}
+							</select>
+						{/snippet}
+					</Control>
+					<FieldErrors />
+				</Field>
+
+				<Field {form} name={`${side}.team.charSwapBeforeRound`}>
+					<Control>
+						{#snippet children({ props })}
+							<input
+								{...props}
+								type="checkbox"
+								bind:checked={$formData[side].team.charSwapBeforeRound}
+							/>
+							<Label>Char swap before round</Label>
+						{/snippet}
+					</Control>
+					<FieldErrors />
+				</Field>
+			</Fieldset>
 		</Fieldset>
-	</Fieldset>
-
-	<!-- Right side -->
-	<Fieldset {form} name="right">
-		<Legend>Right Side</Legend>
-
-		<Field {form} name="right.pointPlayerName">
-			<Control>
-				{#snippet children({ props })}
-					<Label>Point Player</Label>
-					<input {...props} bind:value={$formData.right.pointPlayerName} />
-				{/snippet}
-			</Control>
-			<FieldErrors />
-		</Field>
-
-		<Field {form} name="right.assistPlayerName">
-			<Control>
-				{#snippet children({ props })}
-					<Label>Assist Player (optional)</Label>
-					<input {...props} bind:value={$formData.right.assistPlayerName} />
-				{/snippet}
-			</Control>
-			<FieldErrors />
-		</Field>
-
-		<Fieldset {form} name="right.team">
-			<Legend>Right Team</Legend>
-
-			<Field {form} name="right.team.pointChar">
-				<Control>
-					{#snippet children({ props })}
-						<Label>Point Char</Label>
-						<select {...props} bind:value={$formData.right.team.pointChar}>
-							{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
-						</select>
-					{/snippet}
-				</Control>
-				<FieldErrors />
-			</Field>
-
-			<Field {form} name="right.team.assistChar">
-				<Control>
-					{#snippet children({ props })}
-						<Label>Assist Char</Label>
-						<select {...props} bind:value={$formData.right.team.assistChar}>
-							{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
-						</select>
-					{/snippet}
-				</Control>
-				<FieldErrors />
-			</Field>
-
-			<Field {form} name="right.team.fuse">
-				<Control>
-					{#snippet children({ props })}
-						<Label>Fuse</Label>
-						<select {...props} bind:value={$formData.right.team.fuse}>
-							{#each FUSE as f}<option value={f}>{f}</option>{/each}
-						</select>
-					{/snippet}
-				</Control>
-				<FieldErrors />
-			</Field>
-
-			<Field {form} name="right.team.charSwapBeforeRound">
-				<Control>
-					{#snippet children({ props })}
-						<input
-							{...props}
-							type="checkbox"
-							bind:checked={$formData.right.team.charSwapBeforeRound}
-						/>
-						<Label>Char swap before round</Label>
-					{/snippet}
-				</Control>
-				<FieldErrors />
-			</Field>
-		</Fieldset>
-	</Fieldset>
+	{/each}
 
 	<button class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
 		>Submit</button
