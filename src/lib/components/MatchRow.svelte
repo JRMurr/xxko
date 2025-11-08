@@ -38,13 +38,13 @@
 >
 	<!-- TOP ROW -->
 	<div class="flex h-16 w-full flex-row justify-items-center gap-3">
-		<div class="h-full w-5/10 flex-auto basis-2">
+		<div class="h-full flex-auto basis-5/10">
 			<MatchSideBlock side={match.leftSide} direction="left" />
 		</div>
 
-		<span class="w-2/10 shrink-0 self-center px-3 font-semibold">vs</span>
+		<span class=" shrink-0 self-center px-3 font-semibold">vs</span>
 
-		<div class="h-full w-5/10 flex-auto basis-2">
+		<div class="h-full w-5/10 flex-auto basis-5/10">
 			<MatchSideBlock side={match.rightSide} direction="right" />
 		</div>
 	</div>

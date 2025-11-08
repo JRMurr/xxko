@@ -33,17 +33,22 @@
 			src={charSrc(c)}
 			alt={c}
 			title={c}
-			class="h-[70%] w-auto rounded-lg object-contain"
+			class="flex h-[70%] w-auto basis-1/4 rounded-lg object-contain"
 			loading="lazy"
 		/>
 	{/each}
 	<!-- {#if side.team.charSwapBeforeRound}
 		<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
 	{/if} -->
-	<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
+	<span
+		class="inline-flex basis-1/4 items-center rounded border px-1.5 py-0.5 text-[11px] leading-none"
+	>
 		{side.team.fuse}
 	</span>
-	<span class="text-muted-foreground truncate text-right text-sm" title={playersInline(side)}>
+	<span
+		class="text-muted-foreground basis-1/4 justify-center truncate text-sm"
+		title={playersInline(side)}
+	>
 		{playersInline(side)}
 	</span>
 </div>
