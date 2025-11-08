@@ -5,7 +5,7 @@
 	type MatchSide = CombinedMatchInfo['leftSide'];
 	type Direction = 'left' | 'right';
 
-	const props = $props<{ side: MatchSide; direction?: Direction }>();
+	const props: { side: MatchSide; direction?: Direction } = $props();
 	const side = props.side;
 	const direction: Direction = props.direction ?? 'left';
 
@@ -45,33 +45,30 @@
 {/snippet}
 
 <div class="flex h-full place-content-center items-center gap-2">
-	{#if direction === 'right'}
-		{@render playerName()}
-	{/if}
-
-	<div class="flex h-full items-center gap-1">
+	<!-- <div class="flex h-full items-center gap-1"> -->
+	<div>
 		{#if direction === 'right'}
+			{@render playerName()}
 			{@render fuse()}
 			{@render charSwap()}
-		{/if}
-
-		{#each chars as c}
-			<img
-				src={charSrc(c)}
-				alt={c}
-				title={c}
-				class="h-[70%] w-auto rounded-lg object-contain"
-				loading="lazy"
-			/>
-		{/each}
-
-		{#if direction === 'left'}
-			{@render charSwap()}
-			{@render fuse()}
 		{/if}
 	</div>
 
-	{#if direction === 'left'}
-		{@render playerName()}
-	{/if}
+	{#each chars as c}
+		<img
+			src={charSrc(c)}
+			alt={c}
+			title={c}
+			class="h-[70%] w-auto rounded-lg object-contain"
+			loading="lazy"
+		/>
+	{/each}
+
+	<div>
+		{#if direction === 'left'}
+			{@render charSwap()}
+			{@render fuse()}
+			{@render playerName()}
+		{/if}
+	</div>
 </div>
