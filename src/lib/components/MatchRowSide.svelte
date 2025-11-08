@@ -19,41 +19,15 @@
 		return s.sidePlayers.map((sp) => `${sp.player.name} (${sp.role})`).join(', ');
 	}
 
-	// image order mirrors automatically
-	const chars =
-		direction === 'left'
-			? [side.team.assistChar, side.team.pointChar]
-			: [side.team.pointChar, side.team.assistChar];
+	const chars = [side.team.assistChar, side.team.pointChar];
 </script>
 
-{#snippet playerName()}
-	<span class="text-muted-foreground truncate text-right text-sm" title={playersInline(side)}>
-		{playersInline(side)}
-	</span>
-{/snippet}
-
-{#snippet fuse()}
-	<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
-		{side.team.fuse}
-	</span>
-{/snippet}
-
-{#snippet charSwap()}
-	{#if side.team.charSwapBeforeRound}
-		<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
-	{/if}
-{/snippet}
-
-<div class="flex h-full place-content-center items-center gap-2">
-	<!-- <div class="flex h-full items-center gap-1"> -->
-	<div>
-		{#if direction === 'right'}
-			{@render playerName()}
-			{@render fuse()}
-			{@render charSwap()}
-		{/if}
-	</div>
-
+<div
+	class={[
+		'flex h-full place-content-center items-center gap-2',
+		direction === 'right' ? 'flex-row-reverse' : 'flex-row'
+	]}
+>
 	{#each chars as c}
 		<img
 			src={charSrc(c)}
@@ -63,12 +37,13 @@
 			loading="lazy"
 		/>
 	{/each}
-
-	<div>
-		{#if direction === 'left'}
-			{@render charSwap()}
-			{@render fuse()}
-			{@render playerName()}
-		{/if}
-	</div>
+	<!-- {#if side.team.charSwapBeforeRound}
+		<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
+	{/if} -->
+	<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
+		{side.team.fuse}
+	</span>
+	<span class="text-muted-foreground truncate text-right text-sm" title={playersInline(side)}>
+		{playersInline(side)}
+	</span>
 </div>
