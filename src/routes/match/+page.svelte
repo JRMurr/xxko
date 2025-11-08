@@ -1,5 +1,5 @@
 <script lang="ts">
-	import MatchRow from './MatchRow.svelte';
+	import MatchRow from '$lib/components/MatchRow.svelte';
 
 	const { data } = $props();
 
