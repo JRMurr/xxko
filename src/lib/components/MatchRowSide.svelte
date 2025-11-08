@@ -26,21 +26,33 @@
 			: [side.team.pointChar, side.team.assistChar];
 </script>
 
-<div class="flex h-full min-w-0 items-center gap-2 {direction === 'right' ? 'ml-auto' : ''}">
+{#snippet playerName()}
+	<span class="text-muted-foreground truncate text-right text-sm" title={playersInline(side)}>
+		{playersInline(side)}
+	</span>
+{/snippet}
+
+{#snippet fuse()}
+	<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
+		{side.team.fuse}
+	</span>
+{/snippet}
+
+{#snippet charSwap()}
+	{#if side.team.charSwapBeforeRound}
+		<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
+	{/if}
+{/snippet}
+
+<div class="flex h-full place-content-center items-center gap-2">
 	{#if direction === 'right'}
-		<span class="text-muted-foreground truncate text-right text-sm" title={playersInline(side)}>
-			{playersInline(side)}
-		</span>
+		{@render playerName()}
 	{/if}
 
-	<div class="flex h-full shrink-0 items-center gap-1">
+	<div class="flex h-full items-center gap-1">
 		{#if direction === 'right'}
-			<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
-				{side.team.fuse}
-			</span>
-			{#if side.team.charSwapBeforeRound}
-				<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
-			{/if}
+			{@render fuse()}
+			{@render charSwap()}
 		{/if}
 
 		{#each chars as c}
@@ -54,18 +66,12 @@
 		{/each}
 
 		{#if direction === 'left'}
-			{#if side.team.charSwapBeforeRound}
-				<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
-			{/if}
-			<span class="inline-flex items-center rounded-md border px-2 py-0.5 text-sm leading-none">
-				{side.team.fuse}
-			</span>
+			{@render charSwap()}
+			{@render fuse()}
 		{/if}
 	</div>
 
 	{#if direction === 'left'}
-		<span class="text-muted-foreground truncate text-base font-medium" title={playersInline(side)}>
-			{playersInline(side)}
-		</span>
+		{@render playerName()}
 	{/if}
 </div>
