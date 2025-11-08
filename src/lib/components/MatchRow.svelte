@@ -1,21 +1,10 @@
 <!-- src/lib/components/MatchRow.svelte -->
 <script lang="ts">
 	import type { CombinedMatchInfo } from '$lib/server/match';
-	import { charImages } from '$lib/assets/charImages';
+	import MatchSideBlock from '$lib/components/MatchRowSide.svelte';
 
-	type MatchSide = CombinedMatchInfo['leftSide'];
-	type Team = MatchSide['team'];
-	type VideoSource = CombinedMatchInfo['video'];
-
-	let props = $props();
-
-	const match: CombinedMatchInfo = props.match;
-
-	function playersInline(side: MatchSide) {
-		return side.sidePlayers
-			.map((sp) => (sp.role ? `${sp.player.name} (${sp.role})` : sp.player.name))
-			.join(', ');
-	}
+	let props = $props<{ match: CombinedMatchInfo }>();
+	const match = props.match;
 
 	function formatSpan(start?: number, end?: number | null) {
 		if (start == null) return '';
@@ -23,113 +12,39 @@
 		const dur = Math.max(0, (end ?? start) - start);
 		return `@${start}s • ${dur}s`;
 	}
-	function fuseLabel(team: Team) {
-		return team.fuse;
-	}
-
-	function videoJumpUrl(v: VideoSource, start: number) {
-		// quick-and-dirty: supports typical yt & generic links
-		// YouTube handles `t=` in query; for other links we just append `#t=`
+	function videoJumpUrl(v: CombinedMatchInfo['video'], start: number) {
 		try {
 			const u = new URL(v.url);
 			if (u.hostname.includes('youtube.com') || u.hostname === 'youtu.be') {
-				// preserve existing params
 				if (!u.searchParams.has('t')) u.searchParams.set('t', `${start}s`);
 				return u.toString();
 			}
-			// fallback
 			return `${v.url}#t=${start}s`;
 		} catch {
 			return v.url;
 		}
 	}
-
-	function handleClick(event: MouseEvent) {
-		event.preventDefault();
+	function handleClick(e: MouseEvent) {
+		e.preventDefault();
 		window.open(videoJumpUrl(match.video, match.startSec), '_blank');
-		return;
 	}
-
-	const charSrc = (name: keyof typeof charImages) => charImages[name];
 </script>
 
 <button
 	type="button"
-	class="group hover:bg-muted/60 focus:ring-ring flex h-32 w-full items-center gap-4 rounded-2xl px-4 py-0 text-base focus:ring-2 focus:outline-none"
+	class="group hover:bg-muted/60 focus:ring-ring border-border/60 flex h-16 w-full items-center gap-4 rounded-2xl border px-5 py-0 text-base shadow-sm focus:ring-2 focus:outline-none"
 	onclick={handleClick}
 	aria-label={`Open match ${match.title ?? ''}`}
 >
-	<!-- LEFT: chars + fuse + players -->
-	<div class="flex h-full min-w-0 items-center gap-2">
-		<div class="flex h-full shrink-0 items-center gap-1">
-			<img
-				src={charSrc(match.leftSide.team.pointChar)}
-				alt={match.leftSide.team.pointChar}
-				title={match.leftSide.team.pointChar}
-				class="h-[70%] w-auto rounded-lg object-contain"
-				loading="lazy"
-			/>
-			<img
-				src={charSrc(match.leftSide.team.assistChar)}
-				alt={match.leftSide.team.assistChar}
-				title={match.leftSide.team.assistChar}
-				class="h-[70%] w-auto rounded-lg object-contain"
-				loading="lazy"
-			/>
-
-			{#if match.leftSide.team.charSwapBeforeRound}
-				<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
-			{/if}
-
-			<span class="inline-flex items-center rounded-md border px-2 py-0.5 text-sm leading-none">
-				{match.leftSide.team.fuse}
-			</span>
-		</div>
-
-		<span
-			class="text-muted-foreground truncate text-base font-medium"
-			title={playersInline(match.leftSide)}
-		>
-			{playersInline(match.leftSide)}
-		</span>
+	<div class="h-full min-w-0 flex-1 basis-0">
+		<MatchSideBlock side={match.leftSide} direction="left" />
 	</div>
 
-	<span class="mx-1 shrink-0 text-xs font-semibold opacity-70">vs</span>
+	<span class="shrink-0 px-3 text-center text-xs font-semibold opacity-70">vs</span>
 
-	<!-- RIGHT -->
-	<div class="ml-auto flex h-full min-w-0 items-center gap-2">
-		<span
-			class="text-muted-foreground truncate text-right text-sm"
-			title={playersInline(match.rightSide)}
-		>
-			{playersInline(match.rightSide)}
-		</span>
-
-		<div class="flex h-full shrink-0 items-center gap-1">
-			<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
-				{match.rightSide.team.fuse}
-			</span>
-			{#if match.rightSide.team.charSwapBeforeRound}
-				<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
-			{/if}
-
-			<img
-				src={charSrc(match.rightSide.team.assistChar)}
-				alt={match.rightSide.team.assistChar}
-				title={match.rightSide.team.assistChar}
-				class="h-[70%] w-auto rounded object-contain"
-				loading="lazy"
-			/>
-			<img
-				src={charSrc(match.rightSide.team.pointChar)}
-				alt={match.rightSide.team.pointChar}
-				title={match.rightSide.team.pointChar}
-				class="h-[70%] w-auto rounded object-contain"
-				loading="lazy"
-			/>
-		</div>
+	<div class="h-full min-w-0 flex-1 basis-0">
+		<MatchSideBlock side={match.rightSide} direction="right" />
 	</div>
-
 	<!-- META -->
 	<div class="text-muted-foreground hidden items-center gap-2 pl-2 text-xs md:flex">
 		{#if match.title}
