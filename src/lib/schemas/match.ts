@@ -64,7 +64,7 @@ export const teamSchema = z
 	.superRefine((x, ctx) => {
 		if (x.pointChar === x.assistChar) {
 			ctx.addIssue({
-				code: z.ZodIssueCode.custom,
+				code: 'custom',
 				message: `pointChar and assistChar must be different. Both were (${x.pointChar})`,
 				path: ['assistChar'] // point error at one field (adjust if you prefer ['pointChar'])
 			});

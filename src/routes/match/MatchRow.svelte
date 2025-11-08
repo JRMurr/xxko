@@ -55,30 +55,32 @@
 
 <button
 	type="button"
-	class="group hover:bg-muted/60 focus:ring-ring flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-base focus:ring-2 focus:outline-none"
+	class="group hover:bg-muted/60 focus:ring-ring flex h-32 w-full items-center gap-4 rounded-2xl px-4 py-0 text-base focus:ring-2 focus:outline-none"
 	onclick={handleClick}
 	aria-label={`Open match ${match.title ?? ''}`}
 >
 	<!-- LEFT: chars + fuse + players -->
-	<div class="flex min-w-0 items-center gap-2">
-		<div class="flex shrink-0 items-center gap-1">
+	<div class="flex h-full min-w-0 items-center gap-2">
+		<div class="flex h-full shrink-0 items-center gap-1">
 			<img
 				src={charSrc(match.leftSide.team.pointChar)}
 				alt={match.leftSide.team.pointChar}
 				title={match.leftSide.team.pointChar}
-				class="h-8 w-8 rounded-lg object-contain"
+				class="h-[70%] w-auto rounded-lg object-contain"
 				loading="lazy"
 			/>
 			<img
 				src={charSrc(match.leftSide.team.assistChar)}
 				alt={match.leftSide.team.assistChar}
 				title={match.leftSide.team.assistChar}
-				class="h-8 w-8 rounded-lg object-contain"
+				class="h-[70%] w-auto rounded-lg object-contain"
 				loading="lazy"
 			/>
+
 			{#if match.leftSide.team.charSwapBeforeRound}
 				<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
 			{/if}
+
 			<span class="inline-flex items-center rounded-md border px-2 py-0.5 text-sm leading-none">
 				{match.leftSide.team.fuse}
 			</span>
@@ -92,11 +94,10 @@
 		</span>
 	</div>
 
-	<!-- VS -->
 	<span class="mx-1 shrink-0 text-xs font-semibold opacity-70">vs</span>
 
-	<!-- RIGHT: players + fuse + chars (mirrored) -->
-	<div class="ml-auto flex min-w-0 items-center gap-2">
+	<!-- RIGHT -->
+	<div class="ml-auto flex h-full min-w-0 items-center gap-2">
 		<span
 			class="text-muted-foreground truncate text-right text-sm"
 			title={playersInline(match.rightSide)}
@@ -104,45 +105,39 @@
 			{playersInline(match.rightSide)}
 		</span>
 
-		<div class="flex shrink-0 items-center gap-1">
+		<div class="flex h-full shrink-0 items-center gap-1">
 			<span class="inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] leading-none">
 				{match.rightSide.team.fuse}
 			</span>
 			{#if match.rightSide.team.charSwapBeforeRound}
 				<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
 			{/if}
+
 			<img
 				src={charSrc(match.rightSide.team.assistChar)}
 				alt={match.rightSide.team.assistChar}
 				title={match.rightSide.team.assistChar}
-				class="h-5 w-5 rounded object-contain"
+				class="h-[70%] w-auto rounded object-contain"
 				loading="lazy"
 			/>
 			<img
 				src={charSrc(match.rightSide.team.pointChar)}
 				alt={match.rightSide.team.pointChar}
 				title={match.rightSide.team.pointChar}
-				class="h-5 w-5 rounded object-contain"
+				class="h-[70%] w-auto rounded object-contain"
 				loading="lazy"
 			/>
 		</div>
 	</div>
 
-	<!-- META (right edge, small screens hide most) -->
+	<!-- META -->
 	<div class="text-muted-foreground hidden items-center gap-2 pl-2 text-xs md:flex">
 		{#if match.title}
-			<span class="text-foreground/90 hidden max-w-[28ch] truncate align-middle text-sm lg:inline"
-				>{match.title}</span
-			>
+			<span class="text-foreground/90 hidden max-w-[28ch] truncate align-middle text-sm lg:inline">
+				{match.title}
+			</span>
 		{/if}
 		<span class="tracking-wide uppercase">{match.video.platform}</span>
 		<span>{formatSpan(match.startSec, match.endSec)}</span>
 	</div>
 </button>
-
-<!-- <style>
-	/* optional: make the whole row feel clicky without underlines */
-	a {
-		text-decoration: none;
-	}
-</style> -->
