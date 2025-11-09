@@ -1,35 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, assert } from 'vitest';
 import { createMatch, getMatch } from '.';
-import * as schema from '$lib/server/db/schema';
-import { createDbFromClient } from '../db';
-import { tmpdir } from 'node:os';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { join } from 'node:path';
-import { createClient } from '@libsql/client';
-import { pushSQLiteSchema } from 'drizzle-kit/api';
 import { matchSchema } from '$lib/schemas';
+import { makeMemoryDb, type TestDb } from '$test/utils';
 
-// TODO: pull this into a test helper
-export async function makeMemoryDb() {
-	const dir = await mkdtemp(join(tmpdir(), 'drizzle-'));
-	const fileUrl = `file:${join(dir, 'test.sqlite')}`;
-
-	const client = createClient({ url: fileUrl });
-
-	const db = createDbFromClient(client);
-	// https://github.com/drizzle-team/drizzle-orm/issues/4205#issue-2890429466
-	const { apply } = await pushSQLiteSchema(schema, db);
-	await apply();
-	return {
-		db,
-		fileUrl,
-		cleanup: async () => {
-			await rm(dir, { recursive: true, force: true });
-		}
-	};
-}
-
-let ctx: Awaited<ReturnType<typeof makeMemoryDb>>;
+let ctx: TestDb;
 
 beforeEach(async () => {
 	ctx = await makeMemoryDb();
@@ -101,4 +75,16 @@ describe('create match', () => {
 			}
 		]);
 	});
+
+	// it('test123', () => {
+	// 	const { match } = schema;
+
+	// 	const matchFields = getTableColumns(match);
+
+	// 	matchFields.context.getSQL();
+
+	// 	const sqliteDialect = new SQLiteSyncDialect();
+	// 	const res = sqliteDialect.sqlToQuery(sql`${matchFields.context.getSQL()}`);
+	// 	console.log('test123', res.sql);
+	// });
 });
