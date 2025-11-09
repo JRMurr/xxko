@@ -5,8 +5,27 @@ import { CHARACTERS, FUSE } from '$lib/constants';
 
 const ID_RE = /^[a-zA-Z0-9_-]{11}$/;
 
-export const extractYouTubeId = (input: string): string | null => {
-	if (ID_RE.test(input)) return input;
+type YouTubeRef = { id: string; start?: number | undefined };
+
+const readStartSeconds = (u: URL): number | undefined => {
+	// query (?t=3886 or ?start=3886)
+	const q = u.searchParams.get('t') ?? u.searchParams.get('start');
+	if (q && /^\d+$/.test(q)) return Number(q);
+
+	// hash (#t=3886 or #start=3886)
+	if (u.hash) {
+		const h = u.hash.startsWith('#') ? u.hash.slice(1) : u.hash;
+		for (const kv of h.split('&')) {
+			const [k, v] = kv.split('=');
+			if ((k === 't' || k === 'start') && v && /^\d+$/.test(v)) return Number(v);
+		}
+	}
+	return undefined;
+};
+
+export const extractYouTubeInfo = (input: string): YouTubeRef | null => {
+	// already an ID
+	if (ID_RE.test(input)) return { id: input };
 
 	let url: URL;
 	try {
@@ -15,33 +34,38 @@ export const extractYouTubeId = (input: string): string | null => {
 		return null;
 	}
 
+	// handle redirect-style ?u=<youtube-url>
 	const uParam = url.searchParams.get('u');
 	if (uParam && !ID_RE.test(uParam)) {
 		try {
 			const embedded = new URL(uParam, 'https://youtube.com');
-			const fromEmbedded = extractYouTubeId(embedded.toString());
-			if (fromEmbedded) return fromEmbedded;
+			const inner = extractYouTubeInfo(embedded.toString());
+			if (inner) {
+				// prefer inner start; otherwise inherit outer
+				return { id: inner.id, start: inner.start ?? readStartSeconds(url) };
+			}
 		} catch {
 			/* ignore */
 		}
 	}
 
+	const start = readStartSeconds(url);
 	const host = url.hostname.toLowerCase();
 
 	if (host === 'youtu.be') {
 		const id = url.pathname.split('/').filter(Boolean)[0] ?? '';
-		return ID_RE.test(id) ? id : null;
+		return ID_RE.test(id) ? { id, start } : null;
 	}
 
 	if (host === 'youtube.com' || host.endsWith('.youtube.com')) {
 		const v = url.searchParams.get('v');
-		if (v && ID_RE.test(v)) return v;
+		if (v && ID_RE.test(v)) return { id: v, start };
 
 		const parts = url.pathname.split('/').filter(Boolean);
 		if (parts.length >= 2) {
 			const [kind, maybeId] = parts;
 			if (['shorts', 'embed', 'v', 'live'].includes(kind) && ID_RE.test(maybeId)) {
-				return maybeId;
+				return { id: maybeId, start };
 			}
 		}
 	}
@@ -108,8 +132,8 @@ export const matchSideSchema = z.object({
 // 	.prefault({ url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' });
 
 export const videoSchema = z
-	.string()
-	.refine((x) => !!extractYouTubeId(x), { error: 'Url did not contain a YouTube video id' });
+	.url()
+	.refine((x) => !!extractYouTubeInfo(x), { error: 'Url did not contain a YouTube video id' });
 
 // We need a default value here or the ui will be sad since it will be acting on an undefined on first load (due to the transform)
 // .default({

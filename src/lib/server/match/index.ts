@@ -2,16 +2,16 @@ import * as schema from '$lib/server/db/schema';
 import { type xxDatabase } from '$lib/server/db';
 import {
 	charSchema,
-	extractYouTubeId,
+	extractYouTubeInfo,
 	fuseSchema,
 	matchSchema,
 	matchSideSchema
 } from '$lib/schemas';
 import type { PlayerRole } from '$lib/constants';
 import z from 'zod';
-import { eq, getTableColumns, sql } from 'drizzle-orm';
+import { and, eq, getTableColumns, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core/alias';
-import type { SQLiteColumn, SQLiteSelectQueryBuilder } from 'drizzle-orm/sqlite-core';
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 
 export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) =>
 	db.transaction(
@@ -19,24 +19,60 @@ export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) 
 			// TODO: call out to youtube api to do some level of validation that the link is probably 2xko?
 			// TODO: twitch support
 
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			const youtubeInfo = extractYouTubeInfo(match.video)!;
+
 			const videoInfo = {
 				url: match.video,
 				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				externalId: extractYouTubeId(match.video)!
+				externalId: youtubeInfo.id
 			};
 
-			const [{ videoId }] = await tx
-				.insert(schema.videoSource)
-				.values({ ...videoInfo, platform: 'youtube' })
-				.onConflictDoNothing()
-				.returning({ videoId: schema.videoSource.id });
+			let videoId: number;
+
+			const maybeVideo = await tx
+				.select({ id: schema.videoSource.id })
+				.from(schema.videoSource)
+				.where(eq(schema.videoSource.externalId, videoInfo.externalId))
+				.limit(1); // TODO: and platform when supporting twitch
+
+			if (maybeVideo.length === 1) {
+				videoId = maybeVideo[0].id;
+			} else {
+				const res = await tx
+					.insert(schema.videoSource)
+					.values({ ...videoInfo, platform: 'youtube' })
+					.onConflictDoNothing()
+					.returning({ videoId: schema.videoSource.id });
+				videoId = res[0].videoId;
+			}
 
 			const handleSide = async (info: z.infer<typeof matchSideSchema>) => {
-				const [{ teamId }] = await tx
-					.insert(schema.team)
-					.values(info.team)
-					.onConflictDoNothing()
-					.returning({ teamId: schema.team.id });
+				let teamId: number;
+
+				const maybeTeam = await tx
+					.select({ id: schema.team.id })
+					.from(schema.team)
+					.where(
+						and(
+							eq(schema.team.pointChar, info.team.pointChar),
+							eq(schema.team.assistChar, info.team.assistChar),
+							eq(schema.team.fuse, info.team.fuse),
+							eq(schema.team.charSwapBeforeRound, !!info.team.charSwapBeforeRound)
+						)
+					)
+					.limit(1);
+
+				if (maybeTeam.length === 1) {
+					teamId = maybeTeam[0].id;
+				} else {
+					const res = await tx
+						.insert(schema.team)
+						.values(info.team)
+						.onConflictDoNothing()
+						.returning({ teamId: schema.team.id });
+					teamId = res[0].teamId;
+				}
 
 				const [{ sideId }] = await tx
 					.insert(schema.matchSide)
@@ -46,10 +82,22 @@ export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) 
 					.returning({ sideId: schema.matchSide.id });
 
 				const handlePlayer = async (name: string, role: PlayerRole) => {
-					const [{ playerId }] = await tx
-						.insert(schema.player)
-						.values({ name })
-						.returning({ playerId: schema.player.id });
+					const maybePlayer = await tx
+						.select()
+						.from(schema.player)
+						.where(eq(schema.player.name, name))
+						.limit(1);
+
+					let playerId: number;
+					if (maybePlayer.length === 1) {
+						playerId = maybePlayer[0].id;
+					} else {
+						const res = await tx
+							.insert(schema.player)
+							.values({ name })
+							.returning({ playerId: schema.player.id });
+						playerId = res[0].playerId;
+					}
 
 					await tx.insert(schema.matchSidePlayer).values({ sideId, playerId, role });
 				};
@@ -72,7 +120,7 @@ export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) 
 					leftSideId,
 					rightSideId,
 					videoId,
-					startSec: 0 // TODO:
+					startSec: youtubeInfo.start ?? 0
 				})
 				.returning({ matchId: schema.match.id });
 
