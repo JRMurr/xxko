@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { createClient } from '@libsql/client';
 import { pushSQLiteSchema } from 'drizzle-kit/api';
 import * as schema from '$lib/server/db/schema';
+import type { SQL } from 'drizzle-orm';
+import { SQLiteSyncDialect } from 'drizzle-orm/sqlite-core';
 
 export async function makeMemoryDb() {
 	const dir = await mkdtemp(join(tmpdir(), 'drizzle-'));
@@ -26,3 +28,8 @@ export async function makeMemoryDb() {
 }
 
 export type TestDb = Awaited<ReturnType<typeof makeMemoryDb>>;
+
+export function queryToStr(query: SQL<unknown>) {
+	const sqliteDialect = new SQLiteSyncDialect();
+	return sqliteDialect.sqlToQuery(query).sql;
+}

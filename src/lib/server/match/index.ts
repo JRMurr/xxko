@@ -8,10 +8,11 @@ import {
 	matchSideSchema
 } from '$lib/schemas';
 import type { PlayerRole } from '$lib/constants';
-import z from 'zod';
+import z, { object } from 'zod';
 import { and, eq, getTableColumns, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core/alias';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { queryToStr } from '$test/utils';
 
 export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) =>
 	db.transaction(
@@ -24,7 +25,6 @@ export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) 
 
 			const videoInfo = {
 				url: match.video,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				externalId: youtubeInfo.id
 			};
 
@@ -202,7 +202,7 @@ export const getMatches = async (
 	db: xxDatabase,
 	filter: MatchFilter
 ): Promise<CombinedMatchInfo[]> => {
-	const { match, videoSource } = schema;
+	const { match, videoSource, team, matchSide, matchSidePlayer, player } = schema;
 
 	const get_cols = (cols: Record<string, SQLiteColumn<any>>) => {
 		return (Object.keys(cols) as unknown as (keyof typeof cols)[]).map((k) => cols[k].getSQL());
@@ -222,107 +222,59 @@ export const getMatches = async (
 
 	const video_selects = sql.join(get_cols(getTableColumns(videoSource)), sql.raw(', '));
 
-	const get_side_sql_frags = (side: 'left' | 'right') => {
-		const matchSide = alias(schema.matchSide, `${side}_match_side`);
-		const team = alias(schema.team, `${side}_team`);
-		const sidePlayer = alias(schema.matchSidePlayer, `${side}_team_player`);
-		const player = alias(schema.player, `${side}_player`);
+	// const sideCte = sql`WITH sideJoined as (
+	// 	SELECT
+	// 		${team.pointChar},
+	// 		${team.assistChar},
+	// 		${team.fuse},
+	// 		${team.charSwapBeforeRound},
 
-		const sideIdField = `${side}SideId` as const;
+	// 		${player.name} as player_name,
+	// 		${matchSidePlayer.role} as player_role
+	// 	FROM
 
-		const joins = sql`
-			left join ${matchSide} on ${match[sideIdField]} = ${matchSide.id}
-			left join ${team} on ${matchSide.teamId} = ${team.id} 
-			left join ${sidePlayer} on ${matchSide.id} = ${sidePlayer.sideId}
-			left join ${player} on ${sidePlayer.playerId} = ${player.id}
-		`;
+	// )`;
 
-		const selects = sql.join(
-			[
-				// team
-				sql`${team.pointChar}`.as(`${side}_point_char`),
-				sql`${team.assistChar}`.as(`${side}_assist_char`),
-				sql`${team.fuse}`.as(`${side}_fuse`),
-				sql`${team.charSwapBeforeRound}`.as(`${side}_char_swap`),
-
-				// player
-				sql`${player.name}`.as(`${side}_player_name`),
-				sql`${sidePlayer.role}`.as(`${side}_player_role`)
-			],
-			sql.raw(', ')
-		);
-
-		return {
-			aliases: {
-				matchSide,
-				team,
-				sidePlayer,
-				player
-			},
-			joins,
-			selects
-		};
+	const sideSelects = {
+		id: sql`${matchSide.id}`.as('id'),
+		point_char: sql`${team.pointChar}`.as(`point_char`),
+		assist_char: sql`${team.assistChar}`.as(`assist_char`),
+		fuse: sql`${team.fuse}`.as(`fuse`),
+		char_swap: sql`${team.charSwapBeforeRound}`.as(`char_swap`),
+		// player
+		player_name: sql`${player.name}`.as(`player_name`),
+		player_role: sql`${matchSidePlayer.role}`.as(`player_role`)
 	};
 
-	const left_frags = get_side_sql_frags('left');
-	const right_frags = get_side_sql_frags('left');
+	const sideSubquery = db
+		.select(sideSelects)
+		.from(matchSide)
+		.innerJoin(team, eq(team.id, matchSide.teamId))
+		.innerJoin(matchSidePlayer, eq(matchSidePlayer.sideId, matchSide.id))
+		.innerJoin(player, eq(matchSidePlayer.playerId, player.id));
+
+	const getSideSelectStr = (side: 'left' | 'right') => {
+		const keys = Object.keys(sideSelects) as unknown as (keyof typeof sideSelects)[];
+		return sql.join(
+			keys.map((k) => sql.raw(`${side}SideInfo.${k} as ${side}_${k}`)),
+			sql`, `
+		);
+	};
 
 	const query = sql`
+		WITH sideInfo as ${sideSubquery}
 		select 
 			${match_fields_str},
 			${video_selects},
-			${left_frags.selects},
-			${right_frags.selects}
-		 from ${match}
-		 left join ${videoSource} on ${match.videoId} = ${videoSource.id}
-		 ${left_frags.joins}
-		 ${right_frags.joins}
+			${getSideSelectStr('left')},
+			${getSideSelectStr('right')}
+		from ${match}
+		join ${videoSource} on ${match.videoId} = ${videoSource.id}
+		left join sideInfo as leftSideInfo on leftSideInfo.id = ${match.leftSideId}
+		left join sideInfo as rightSideInfo on rightSideInfo.id = ${match.rightSideId}
 	`;
+
+	console.log('query', queryToStr(query));
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	return (await db.run(query)).rows.map(normalizeRow) as any;
-	// function withSide<T extends SQLiteSelectQueryBuilder>(
-	// 	qb: T,
-	// 	sideName: 'left_side' | 'right_side'
-	// ) {
-	// 	const side = alias(matchSide, sideName);
-	// 	return qb.leftJoin(side, eq(match.id, side.id));
-	// }
-	// const left_side;
-	// const {
-	// 	videoId: _vid_id,
-	// 	leftSideId: _left_id,
-	// 	rightSideId: _right_id,
-	// 	...match_fields
-	// } = getTableColumns(match);
-	// const base = db
-	// 	.select({
-	// 		...match_fields,
-	// 		video: videoSource,
-	// 		leftSide: {
-	// 			team_point_char: team.pointChar,
-	// 			team_assist_char: team.assistChar,
-	// 			fuse: team.fuse,
-	// 			point_player: team.po
-	// 		},
-	// 		rightSide: {}
-	// 	})
-	// 	.from(match);
-	// const with_left = withSide(base.$dynamic(), 'left_side');
-	// const full = withSide(with_left.$dynamic(), 'right_side');
-	// return await full;
-	// return db.query.match.findMany({
-	// 	orderBy: (match, { desc }) => [desc(match.created_at)],
-	// 	where: (match, { eq }) => (filter.patch ? eq(match.patch, filter.patch) : undefined),
-	// 	limit: filter.limit ?? 10,
-	// 	columns: {
-	// 		videoId: false,
-	// 		leftSideId: false,
-	// 		rightSideId: false
-	// 	},
-	// 	with: {
-	// 		leftSide: sideWithClause,
-	// 		rightSide: sideWithClause,
-	// 		video: true
-	// 	}
-	// });
 };
