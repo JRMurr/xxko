@@ -8,9 +8,8 @@ import {
 	matchSideSchema
 } from '$lib/schemas';
 import type { PlayerRole } from '$lib/constants';
-import z, { object } from 'zod';
+import z from 'zod';
 import { and, eq, getTableColumns, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/sqlite-core/alias';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { queryToStr } from '$test/utils';
 
@@ -183,57 +182,32 @@ export const matchFilterSchema = z
 
 type MatchFilter = z.infer<typeof matchFilterSchema>;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function normalizeRow(obj: any) {
-	// The libSQL node-sqlite3 compatibility wrapper returns rows
-	// that can be accessed both as objects and arrays. Let's
-	// turn them into objects what's what other SQLite drivers
-	// do.
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	return Object.keys(obj).reduce((acc: Record<string, any>, key) => {
-		if (Object.prototype.propertyIsEnumerable.call(obj, key)) {
-			acc[key] = obj[key];
-		}
-		return acc;
-	}, {});
-}
-
 export const getMatches = async (
 	db: xxDatabase,
 	filter: MatchFilter
 ): Promise<CombinedMatchInfo[]> => {
 	const { match, videoSource, team, matchSide, matchSidePlayer, player } = schema;
 
-	const get_cols = (cols: Record<string, SQLiteColumn<any>>) => {
-		return (Object.keys(cols) as unknown as (keyof typeof cols)[]).map((k) => cols[k].getSQL());
-	};
+	// // eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// const get_cols = (cols: Record<string, SQLiteColumn<any>>, prefix: string) => {
+	// 	return (Object.keys(cols) as unknown as (keyof typeof cols)[]).map((k) => {
+	// 		return sql.raw(`${prefix}_${cols[k].name}`);
+	// 		// return cols[k].getSQL()
+	// 	});
+	// };
 
-	const {
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		videoId: _vid_id,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		leftSideId: _left_id,
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		rightSideId: _right_id,
-		...match_fields
-	} = getTableColumns(match);
+	// const {
+	// 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// 	videoId: _vid_id,
+	// 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// 	leftSideId: _left_id,
+	// 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// 	rightSideId: _right_id,
+	// 	...match_fields
+	// } = getTableColumns(match);
 
-	const match_fields_str = sql.join(get_cols(match_fields), sql.raw(', '));
-
-	const video_selects = sql.join(get_cols(getTableColumns(videoSource)), sql.raw(', '));
-
-	// const sideCte = sql`WITH sideJoined as (
-	// 	SELECT
-	// 		${team.pointChar},
-	// 		${team.assistChar},
-	// 		${team.fuse},
-	// 		${team.charSwapBeforeRound},
-
-	// 		${player.name} as player_name,
-	// 		${matchSidePlayer.role} as player_role
-	// 	FROM
-
-	// )`;
+	// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+	// const { id: _, ...video_fields } = getTableColumns(videoSource);
 
 	const sideSelects = {
 		id: sql`${matchSide.id}`.as('id'),
@@ -253,6 +227,31 @@ export const getMatches = async (
 		.innerJoin(matchSidePlayer, eq(matchSidePlayer.sideId, matchSide.id))
 		.innerJoin(player, eq(matchSidePlayer.playerId, player.id));
 
+	const matchSelects = {
+		match_id: sql`${match.id}`.as('match_id'),
+		match_left_side_id: sql`${match.leftSideId}`.as('match_left_side_id'),
+		match_right_side_id: sql`${match.rightSideId}`.as('match_right_side_id'),
+		match_start_sec: sql`${match.startSec}`.as('match_start_sec'),
+		match_end_sec: sql`${match.endSec}`.as('match_end_sec'),
+		match_title: sql`${match.title}`.as('match_title'),
+		match_context: sql`${match.context}`.as('match_context'),
+		match_created_at: sql`${match.created_at}`.as('match_created_at'),
+		match_patch: sql`${match.patch}`.as('match_patch'),
+		match_notes: sql`${match.notes}`.as('match_notes')
+	};
+
+	const videoSelects = {
+		video_platform: sql`${videoSource.platform}`.as('video_platform'),
+		video_external_id: sql`${videoSource.externalId}`.as('video_external_id'),
+		video_url: sql`${videoSource.url}`.as('video_url')
+	};
+
+	const matchVideo = db
+		.select({ ...matchSelects, ...videoSelects })
+		.from(match)
+		.innerJoin(videoSource, eq(videoSource.id, match.videoId))
+		.limit(filter.limit ?? 10);
+
 	const getSideSelectStr = (side: 'left' | 'right') => {
 		const keys = Object.keys(sideSelects) as unknown as (keyof typeof sideSelects)[];
 		return sql.join(
@@ -261,20 +260,39 @@ export const getMatches = async (
 		);
 	};
 
+	const matchVideoSelects = sql.join(
+		Object.keys({ ...matchSelects, ...videoSelects }).map((k) => sql.raw(k)),
+		sql`, `
+	);
+
 	const query = sql`
-		WITH sideInfo as ${sideSubquery}
+		WITH 
+			sideInfo as ${sideSubquery},
+			matchVideo as ${matchVideo}
 		select 
-			${match_fields_str},
-			${video_selects},
+			${matchVideoSelects},
 			${getSideSelectStr('left')},
 			${getSideSelectStr('right')}
-		from ${match}
-		join ${videoSource} on ${match.videoId} = ${videoSource.id}
-		left join sideInfo as leftSideInfo on leftSideInfo.id = ${match.leftSideId}
-		left join sideInfo as rightSideInfo on rightSideInfo.id = ${match.rightSideId}
+		from matchVideo
+		left join sideInfo as leftSideInfo on leftSideInfo.id = matchVideo.match_left_side_id
+		left join sideInfo as rightSideInfo on rightSideInfo.id = matchVideo.match_right_side_id
 	`;
 
-	console.log('query', queryToStr(query));
+	// console.log('query', queryToStr(query));
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	return (await db.run(query)).rows.map(normalizeRow) as any;
+	const rows = await db.all(query);
+
+	const grouped = rows.reduce((acc, row) => {
+		if (acc[row.match_id]) {
+			acc[row.match_id].push(row);
+		} else {
+			acc[row.match_id] = [row];
+		}
+
+		return acc;
+	}, {});
+
+	console.log(grouped);
+
+	return Object.values(rows);
 };
