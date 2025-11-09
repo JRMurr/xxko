@@ -188,44 +188,29 @@ export const getMatches = async (
 ): Promise<CombinedMatchInfo[]> => {
 	const { match, videoSource, team, matchSide, matchSidePlayer, player } = schema;
 
-	// // eslint-disable-next-line @typescript-eslint/no-explicit-any
-	// const get_cols = (cols: Record<string, SQLiteColumn<any>>, prefix: string) => {
-	// 	return (Object.keys(cols) as unknown as (keyof typeof cols)[]).map((k) => {
-	// 		return sql.raw(`${prefix}_${cols[k].name}`);
-	// 		// return cols[k].getSQL()
-	// 	});
-	// };
-
-	// const {
-	// 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	// 	videoId: _vid_id,
-	// 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	// 	leftSideId: _left_id,
-	// 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	// 	rightSideId: _right_id,
-	// 	...match_fields
-	// } = getTableColumns(match);
-
-	// // eslint-disable-next-line @typescript-eslint/no-unused-vars
-	// const { id: _, ...video_fields } = getTableColumns(videoSource);
-
 	const sideSelects = {
-		id: sql`${matchSide.id}`.as('id'),
-		point_char: sql`${team.pointChar}`.as(`point_char`),
-		assist_char: sql`${team.assistChar}`.as(`assist_char`),
-		fuse: sql`${team.fuse}`.as(`fuse`),
-		char_swap: sql`${team.charSwapBeforeRound}`.as(`char_swap`),
-		// player
-		player_name: sql`${player.name}`.as(`player_name`),
-		player_role: sql`${matchSidePlayer.role}`.as(`player_role`)
+		id: sql<number>`${matchSide.id}`.as(`id`),
+		point_char: sql<string>`${team.pointChar}`.as(`point_char`),
+		assist_char: sql<string>`${team.assistChar}`.as(`assist_char`),
+		fuse: sql<string>`${team.fuse}`.as(`fuse`),
+		char_swap: sql<number>`${team.charSwapBeforeRound}`.as(`char_swap`),
+
+		player:
+			sql`json_group_array(json_object('name', ${player.name}, 'role', ${matchSidePlayer.role}))`.as(
+				'player'
+			)
 	};
+
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const { player: _player, ...side_group_by } = sideSelects;
 
 	const sideSubquery = db
 		.select(sideSelects)
 		.from(matchSide)
 		.innerJoin(team, eq(team.id, matchSide.teamId))
 		.innerJoin(matchSidePlayer, eq(matchSidePlayer.sideId, matchSide.id))
-		.innerJoin(player, eq(matchSidePlayer.playerId, player.id));
+		.innerJoin(player, eq(matchSidePlayer.playerId, player.id))
+		.groupBy(team.pointChar, team.assistChar, team.fuse, team.charSwapBeforeRound);
 
 	const matchSelects = {
 		match_id: sql`${match.id}`.as('match_id'),
@@ -249,8 +234,7 @@ export const getMatches = async (
 	const matchVideo = db
 		.select({ ...matchSelects, ...videoSelects })
 		.from(match)
-		.innerJoin(videoSource, eq(videoSource.id, match.videoId))
-		.limit(filter.limit ?? 10);
+		.innerJoin(videoSource, eq(videoSource.id, match.videoId));
 
 	const getSideSelectStr = (side: 'left' | 'right') => {
 		const keys = Object.keys(sideSelects) as unknown as (keyof typeof sideSelects)[];
@@ -276,10 +260,11 @@ export const getMatches = async (
 		from matchVideo
 		left join sideInfo as leftSideInfo on leftSideInfo.id = matchVideo.match_left_side_id
 		left join sideInfo as rightSideInfo on rightSideInfo.id = matchVideo.match_right_side_id
+		limit 10
 	`;
 
-	// console.log('query', queryToStr(query));
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	console.log('query', queryToStr(query));
+
 	const rows = await db.all(query);
 
 	const grouped = rows.reduce((acc, row) => {
@@ -292,7 +277,7 @@ export const getMatches = async (
 		return acc;
 	}, {});
 
-	console.log(grouped);
+	// console.log(grouped);
 
 	return Object.values(rows);
 };
