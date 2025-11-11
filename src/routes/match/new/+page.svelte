@@ -17,7 +17,7 @@
 </script>
 
 <h1>Create Match</h1>
-<SuperDebug data={$formData} />
+<!-- <SuperDebug data={$formData} /> -->
 
 <form use:enhance class="mx-auto flex max-w-3xl flex-col gap-6" method="POST">
 	{#if $message}
@@ -31,7 +31,7 @@
 				<input {...props} placeholder="https://youtu.be/..." bind:value={$formData.video} />
 			{/snippet}
 		</Control>
-		<Description>We'll extract the ID; shorts/embed links are fine.</Description>
+		<!-- <Description>We'll extract the ID; shorts/embed links are fine.</Description> -->
 		<FieldErrors />
 	</Field>
 
@@ -106,7 +106,10 @@
 								type="checkbox"
 								bind:checked={$formData[side].team.charSwapBeforeRound}
 							/>
-							<Label>Char swap before round</Label>
+							<Label
+								>If there was a tag before round swap after the first round. (Only really matters if
+								using Juggernaut/Side Kick)</Label
+							>
 						{/snippet}
 					</Control>
 					<FieldErrors />

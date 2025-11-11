@@ -13,3 +13,9 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	return json(created);
 };
+
+export const GET: RequestHandler = async ({ request, locals }) => {
+	const res = await getMatches(locals.db, { limit: 10 });
+
+	return json(res);
+};

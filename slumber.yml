@@ -18,6 +18,11 @@ profiles:
       host: http://localhost:5173
 
 requests:
+  get_matches:
+    name: get_matches
+    method: GET
+    url: '{{ host }}/api/match'
+
   create_dummy:
     name: create match
     method: POST
