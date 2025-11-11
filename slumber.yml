@@ -39,18 +39,18 @@ requests:
             }
         }
 
-  example_get:
-    name: Example GET
-    method: GET
-    url: '{{ host }}/get'
+  # example_get:
+  #   name: Example GET
+  #   method: GET
+  #   url: '{{ host }}/get'
 
-  example_folder:
-    name: Example Folder
-    requests:
-      example_post:
-        name: Example POST
-        method: POST
-        url: '{{ host }}/post'
-        body:
-          type: json
-          data: { 'data': "{{ response('example_get') | jsonpath('$.data') }}" }
+  # example_folder:
+  #   name: Example Folder
+  #   requests:
+  #     example_post:
+  #       name: Example POST
+  #       method: POST
+  #       url: '{{ host }}/post'
+  #       body:
+  #         type: json
+  #         data: { 'data': "{{ response('example_get') | jsonpath('$.data') }}" }
