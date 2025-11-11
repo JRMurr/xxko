@@ -1,4 +1,11 @@
-import * as schema from '$lib/server/db/schema';
+import {
+	match,
+	videoSource,
+	team,
+	matchSide,
+	matchSidePlayer,
+	player
+} from '$lib/server/db/schema';
 import { type xxDatabase } from '$lib/server/db';
 import {
 	charSchema,
@@ -7,41 +14,51 @@ import {
 	matchSchema,
 	matchSideSchema
 } from '$lib/schemas';
-import type { PlayerRole } from '$lib/constants';
+import { PLAYER_ROLE, type PlayerRole } from '$lib/constants';
 import z from 'zod';
-import { and, eq, inArray, like, SQL, sql } from 'drizzle-orm';
+import {
+	and,
+	eq,
+	inArray,
+	like,
+	SQL,
+	sql,
+	type ColumnBaseConfig,
+	type ColumnDataType
+} from 'drizzle-orm';
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 // import { queryDebug } from '$test/utils';
 
-export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) =>
+export const createMatch = (db: xxDatabase, matchInfo: z.infer<typeof matchSchema>) =>
 	db.transaction(
 		async (tx) => {
 			// TODO: call out to youtube api to do some level of validation that the link is probably 2xko?
 			// TODO: twitch support
 
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const youtubeInfo = extractYouTubeInfo(match.video)!;
+			const youtubeInfo = extractYouTubeInfo(matchInfo.video)!;
 
 			const videoInfo = {
-				url: match.video,
+				url: matchInfo.video,
 				externalId: youtubeInfo.id
 			};
 
 			let videoId: number;
 
 			const maybeVideo = await tx
-				.select({ id: schema.videoSource.id })
-				.from(schema.videoSource)
-				.where(eq(schema.videoSource.externalId, videoInfo.externalId))
+				.select({ id: videoSource.id })
+				.from(videoSource)
+				.where(eq(videoSource.externalId, videoInfo.externalId))
 				.limit(1); // TODO: and platform when supporting twitch
 
 			if (maybeVideo.length === 1) {
 				videoId = maybeVideo[0].id;
 			} else {
 				const res = await tx
-					.insert(schema.videoSource)
+					.insert(videoSource)
 					.values({ ...videoInfo, platform: 'youtube' })
 					.onConflictDoNothing()
-					.returning({ videoId: schema.videoSource.id });
+					.returning({ videoId: videoSource.id });
 				videoId = res[0].videoId;
 			}
 
@@ -49,14 +66,14 @@ export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) 
 				let teamId: number;
 
 				const maybeTeam = await tx
-					.select({ id: schema.team.id })
-					.from(schema.team)
+					.select({ id: team.id })
+					.from(team)
 					.where(
 						and(
-							eq(schema.team.pointChar, info.team.pointChar),
-							eq(schema.team.assistChar, info.team.assistChar),
-							eq(schema.team.fuse, info.team.fuse),
-							eq(schema.team.charSwapBeforeRound, !!info.team.charSwapBeforeRound)
+							eq(team.pointChar, info.team.pointChar),
+							eq(team.assistChar, info.team.assistChar),
+							eq(team.fuse, info.team.fuse),
+							eq(team.charSwapBeforeRound, !!info.team.charSwapBeforeRound)
 						)
 					)
 					.limit(1);
@@ -65,39 +82,32 @@ export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) 
 					teamId = maybeTeam[0].id;
 				} else {
 					const res = await tx
-						.insert(schema.team)
+						.insert(team)
 						.values(info.team)
 						.onConflictDoNothing()
-						.returning({ teamId: schema.team.id });
+						.returning({ teamId: team.id });
 					teamId = res[0].teamId;
 				}
 
 				const [{ sideId }] = await tx
-					.insert(schema.matchSide)
+					.insert(matchSide)
 					.values({
 						teamId
 					})
-					.returning({ sideId: schema.matchSide.id });
+					.returning({ sideId: matchSide.id });
 
 				const handlePlayer = async (name: string, role: PlayerRole) => {
-					const maybePlayer = await tx
-						.select()
-						.from(schema.player)
-						.where(eq(schema.player.name, name))
-						.limit(1);
+					const maybePlayer = await tx.select().from(player).where(eq(player.name, name)).limit(1);
 
 					let playerId: number;
 					if (maybePlayer.length === 1) {
 						playerId = maybePlayer[0].id;
 					} else {
-						const res = await tx
-							.insert(schema.player)
-							.values({ name })
-							.returning({ playerId: schema.player.id });
+						const res = await tx.insert(player).values({ name }).returning({ playerId: player.id });
 						playerId = res[0].playerId;
 					}
 
-					await tx.insert(schema.matchSidePlayer).values({ sideId, playerId, role });
+					await tx.insert(matchSidePlayer).values({ sideId, playerId, role });
 				};
 
 				await handlePlayer(info.pointPlayerName, 'point');
@@ -109,18 +119,18 @@ export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) 
 				return sideId;
 			};
 
-			const leftSideId = await handleSide(match.left);
-			const rightSideId = await handleSide(match.right);
+			const leftSideId = await handleSide(matchInfo.left);
+			const rightSideId = await handleSide(matchInfo.right);
 
 			const [{ matchId }] = await tx
-				.insert(schema.match)
+				.insert(match)
 				.values({
 					leftSideId,
 					rightSideId,
 					videoId,
 					startSec: youtubeInfo.start ?? 0
 				})
-				.returning({ matchId: schema.match.id });
+				.returning({ matchId: match.id });
 
 			return matchId;
 		},
@@ -181,12 +191,90 @@ export const matchFilterSchema = z
 
 export type MatchFilter = z.infer<typeof matchFilterSchema>;
 
+type ExtractData<T> =
+	T extends SQLiteColumn<infer Inner>
+		? Inner extends { data: infer E; notNull: true }
+			? E
+			: Inner extends { data: infer E; notNull: false }
+				? E | null
+				: never
+		: never;
+
+const typed_as = <X extends ColumnBaseConfig<ColumnDataType, string>, T extends SQLiteColumn<X>>(
+	col: T,
+	alias: string
+): SQL.Aliased<ExtractData<T>> => {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	return sql`${col}`.as(alias) as any;
+};
+
+const sideSelects = {
+	id: typed_as(matchSide.id, 'id'),
+	point_char: typed_as(team.pointChar, 'point_char'),
+	assist_char: typed_as(team.assistChar, 'assist_char'),
+	fuse: typed_as(team.fuse, 'fuse'),
+	char_swap: typed_as(team.charSwapBeforeRound, 'char_swap'),
+
+	players:
+		sql<string>`json_group_array(json_object('name', ${player.name}, 'role', ${matchSidePlayer.role}))`.as(
+			'players'
+		)
+};
+
+type SideSelectsRaw = typeof sideSelects;
+
+type SideSelectTypes = { [K in keyof SideSelectsRaw]: InferAlias<SideSelectsRaw[K]> };
+
+type PrefixKeys<T, P extends string> = {
+	[K in keyof T as K extends string | number ? `${P}${K}` : K]: T[K];
+};
+
+type LeftSideSelects = PrefixKeys<SideSelectsRaw, 'left_'>;
+type RightSideSelects = PrefixKeys<SideSelectsRaw, 'right_'>;
+
+const matchSelects = {
+	match_id: typed_as(match.id, 'match_id'),
+	match_left_side_id: typed_as(match.leftSideId, 'match_left_side_id'),
+	match_right_side_id: typed_as(match.rightSideId, 'match_right_side_id'),
+	match_start_sec: typed_as(match.startSec, 'match_start_sec'),
+	match_end_sec: typed_as(match.endSec, 'match_end_sec'),
+	match_title: typed_as(match.title, 'match_title'),
+	match_context: typed_as(match.context, 'match_context'),
+	match_created_at: typed_as(match.created_at, 'match_created_at'),
+	match_patch: typed_as(match.patch, 'match_patch'),
+	match_notes: typed_as(match.notes, 'match_notes')
+};
+
+type MatchSelects = typeof matchSelects;
+
+const videoSelects = {
+	video_id: typed_as(videoSource.id, 'video_id'),
+	video_platform: typed_as(videoSource.platform, 'video_platform'),
+	video_external_id: typed_as(videoSource.externalId, 'video_external_id'),
+	video_url: typed_as(videoSource.url, 'video_url')
+};
+
+type VideoSelects = typeof videoSelects;
+
+type InferAlias<T> = T extends SQL.Aliased<infer I> ? I : never;
+
+type AllSelects = LeftSideSelects & RightSideSelects & MatchSelects & VideoSelects;
+
+type RawGetRow = {
+	[K in keyof AllSelects]: InferAlias<AllSelects[K]>;
+};
+
+const playerSchema = z
+	.object({
+		name: z.string().nonempty(),
+		role: z.enum(PLAYER_ROLE)
+	})
+	.transform(({ name, role }) => ({ player: { name }, role }));
+
 export const getMatches = async (
 	db: xxDatabase,
 	filter: MatchFilter
 ): Promise<CombinedMatchInfo[]> => {
-	const { match, videoSource, team, matchSide, matchSidePlayer, player } = schema;
-
 	const filterIf = <T, FilterFn extends (x: T) => SQL<undefined>>(
 		cond: T | undefined,
 		filter: SQL<undefined> | FilterFn
@@ -213,67 +301,36 @@ export const getMatches = async (
 
 	const sideFilterStr = sideFilters.length ? sql.join(sideFilters, sql` or `) : sql`true`;
 
-	const sideSelects = {
-		id: sql<number>`${matchSide.id}`.as(`id`),
-		point_char: sql<string>`${team.pointChar}`.as(`point_char`),
-		assist_char: sql<string>`${team.assistChar}`.as(`assist_char`),
-		fuse: sql<string>`${team.fuse}`.as(`fuse`),
-		char_swap: sql<number>`${team.charSwapBeforeRound}`.as(`char_swap`),
-
-		side_filter: sql<number>`max(${sideFilterStr})`.as(`side_filter`),
-
-		player:
-			sql`json_group_array(json_object('name', ${player.name}, 'role', ${matchSidePlayer.role}))`.as(
-				'player'
-			)
+	// not selected on in final query but filtered on later
+	const sideComputed = {
+		side_filter: sql<number>`max(${sideFilterStr})`.as(`side_filter`)
 	};
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const { player: _player, ...side_group_by } = sideSelects;
-
 	const sideSubquery = db
-		.select(sideSelects)
+		.select({ ...sideSelects, ...sideComputed })
 		.from(matchSide)
 		.innerJoin(team, eq(team.id, matchSide.teamId))
 		.innerJoin(matchSidePlayer, eq(matchSidePlayer.sideId, matchSide.id))
 		.innerJoin(player, eq(matchSidePlayer.playerId, player.id))
 		.groupBy(team.pointChar, team.assistChar, team.fuse, team.charSwapBeforeRound);
 
-	const matchSelects = {
-		match_id: sql`${match.id}`.as('match_id'),
-		match_left_side_id: sql`${match.leftSideId}`.as('match_left_side_id'),
-		match_right_side_id: sql`${match.rightSideId}`.as('match_right_side_id'),
-		match_start_sec: sql`${match.startSec}`.as('match_start_sec'),
-		match_end_sec: sql`${match.endSec}`.as('match_end_sec'),
-		match_title: sql`${match.title}`.as('match_title'),
-		match_context: sql`${match.context}`.as('match_context'),
-		match_created_at: sql`${match.created_at}`.as('match_created_at'),
-		match_patch: sql`${match.patch}`.as('match_patch'),
-		match_notes: sql`${match.notes}`.as('match_notes')
-	};
-
-	const videoSelects = {
-		video_platform: sql`${videoSource.platform}`.as('video_platform'),
-		video_external_id: sql`${videoSource.externalId}`.as('video_external_id'),
-		video_url: sql`${videoSource.url}`.as('video_url')
-	};
-
 	const matchVideo = db
 		.select({ ...matchSelects, ...videoSelects })
 		.from(match)
 		.innerJoin(videoSource, eq(videoSource.id, match.videoId));
 
-	const getSideField = (side: 'left' | 'right', field: keyof typeof sideSelects) => {
+	const getSideField = (
+		side: 'left' | 'right',
+		field: keyof typeof sideSelects | keyof typeof sideComputed
+	) => {
 		return sql.raw(`${side}SideInfo.${field}`);
 	};
 
 	const getSideSelectStr = (side: 'left' | 'right') => {
 		const keys = Object.keys(sideSelects) as unknown as (keyof typeof sideSelects)[];
 
-		const filtered_keys = keys.filter((k) => k !== 'side_filter');
-
 		return sql.join(
-			filtered_keys.map((k) => {
+			keys.map((k) => {
 				const alias = sql.raw(`${side}_${k}`);
 				return sql`${getSideField(side, k).as()} as ${alias}`;
 			}),
@@ -301,5 +358,40 @@ export const getMatches = async (
 		limit ${filter.limit ?? 10}
 	`;
 
-	return await db.all(query);
+	const rows: RawGetRow[] = await db.all(query);
+
+	return rows.map((r): CombinedMatchInfo => {
+		const get_side = (side: 'left' | 'right') => {
+			const k = <K extends keyof SideSelectTypes>(key: K) => r[`${side}_${key}`];
+			return {
+				team: {
+					id: k('id'),
+					pointChar: k('point_char'),
+					assistChar: k('assist_char'),
+					charSwapBeforeRound: k('char_swap'),
+					fuse: k('fuse')
+				},
+				sidePlayers: z.array(playerSchema).parse(JSON.parse(k('players')))
+			};
+		};
+
+		return {
+			context: r.match_context,
+			created_at: r.match_created_at,
+			startSec: r.match_start_sec,
+			endSec: r.match_end_sec,
+			id: r.match_id,
+			notes: r.match_notes,
+			patch: r.match_patch,
+			title: r.match_title,
+			video: {
+				id: r.video_id,
+				url: r.video_url,
+				externalId: r.video_external_id,
+				platform: r.video_platform
+			},
+			leftSide: get_side('left'),
+			rightSide: get_side('right')
+		};
+	});
 };
