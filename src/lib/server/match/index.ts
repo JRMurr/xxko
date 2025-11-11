@@ -9,9 +9,8 @@ import {
 } from '$lib/schemas';
 import type { PlayerRole } from '$lib/constants';
 import z from 'zod';
-import { and, eq, getTableColumns, sql } from 'drizzle-orm';
-import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
-import { queryToStr } from '$test/utils';
+import { and, eq, inArray, like, SQL, sql } from 'drizzle-orm';
+// import { queryDebug } from '$test/utils';
 
 export const createMatch = (db: xxDatabase, match: z.infer<typeof matchSchema>) =>
 	db.transaction(
@@ -180,7 +179,7 @@ export const matchFilterSchema = z
 	})
 	.partial();
 
-type MatchFilter = z.infer<typeof matchFilterSchema>;
+export type MatchFilter = z.infer<typeof matchFilterSchema>;
 
 export const getMatches = async (
 	db: xxDatabase,
@@ -188,12 +187,40 @@ export const getMatches = async (
 ): Promise<CombinedMatchInfo[]> => {
 	const { match, videoSource, team, matchSide, matchSidePlayer, player } = schema;
 
+	const filterIf = <T, FilterFn extends (x: T) => SQL<undefined>>(
+		cond: T | undefined,
+		filter: SQL<undefined> | FilterFn
+	) => {
+		if (!cond) {
+			return undefined;
+		}
+
+		if (typeof filter === 'function') {
+			return filter(cond);
+		}
+
+		return filter;
+	};
+
+	const sideFilters = [
+		filterIf(!!filter.player, sql`${like(player.name, `%${filter.player}%`)}`),
+		filterIf(filter.fuse, (fuse) => sql`${inArray(team.fuse, fuse)}`),
+		filterIf(
+			filter.character,
+			(chars) => sql`(${inArray(team.pointChar, chars)} or ${inArray(team.assistChar, chars)})`
+		)
+	].filter((maybeFilter) => !!maybeFilter);
+
+	const sideFilterStr = sideFilters.length ? sql.join(sideFilters, sql` or `) : sql`true`;
+
 	const sideSelects = {
 		id: sql<number>`${matchSide.id}`.as(`id`),
 		point_char: sql<string>`${team.pointChar}`.as(`point_char`),
 		assist_char: sql<string>`${team.assistChar}`.as(`assist_char`),
 		fuse: sql<string>`${team.fuse}`.as(`fuse`),
 		char_swap: sql<number>`${team.charSwapBeforeRound}`.as(`char_swap`),
+
+		side_filter: sql<number>`max(${sideFilterStr})`.as(`side_filter`),
 
 		player:
 			sql`json_group_array(json_object('name', ${player.name}, 'role', ${matchSidePlayer.role}))`.as(
@@ -236,10 +263,20 @@ export const getMatches = async (
 		.from(match)
 		.innerJoin(videoSource, eq(videoSource.id, match.videoId));
 
+	const getSideField = (side: 'left' | 'right', field: keyof typeof sideSelects) => {
+		return sql.raw(`${side}SideInfo.${field}`);
+	};
+
 	const getSideSelectStr = (side: 'left' | 'right') => {
 		const keys = Object.keys(sideSelects) as unknown as (keyof typeof sideSelects)[];
+
+		const filtered_keys = keys.filter((k) => k !== 'side_filter');
+
 		return sql.join(
-			keys.map((k) => sql.raw(`${side}SideInfo.${k} as ${side}_${k}`)),
+			filtered_keys.map((k) => {
+				const alias = sql.raw(`${side}_${k}`);
+				return sql`${getSideField(side, k).as()} as ${alias}`;
+			}),
 			sql`, `
 		);
 	};
@@ -260,24 +297,9 @@ export const getMatches = async (
 		from matchVideo
 		left join sideInfo as leftSideInfo on leftSideInfo.id = matchVideo.match_left_side_id
 		left join sideInfo as rightSideInfo on rightSideInfo.id = matchVideo.match_right_side_id
-		limit 10
+		where ${getSideField('left', 'side_filter')} = true or ${getSideField('right', 'side_filter')} = true
+		limit ${filter.limit ?? 10}
 	`;
 
-	console.log('query', queryToStr(query));
-
-	const rows = await db.all(query);
-
-	const grouped = rows.reduce((acc, row) => {
-		if (acc[row.match_id]) {
-			acc[row.match_id].push(row);
-		} else {
-			acc[row.match_id] = [row];
-		}
-
-		return acc;
-	}, {});
-
-	// console.log(grouped);
-
-	return Object.values(rows);
+	return await db.all(query);
 };

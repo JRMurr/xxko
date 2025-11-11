@@ -29,7 +29,7 @@ export async function makeMemoryDb() {
 
 export type TestDb = Awaited<ReturnType<typeof makeMemoryDb>>;
 
-export function queryToStr(query: SQL<unknown>) {
+export function queryDebug(query: SQL<unknown>) {
 	const sqliteDialect = new SQLiteSyncDialect();
-	return sqliteDialect.sqlToQuery(query).sql;
+	return sqliteDialect.sqlToQuery(query);
 }
