@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/LucasPickering/slumber/refs/tags/v4.1.0/schemas/collection.json
+# ^ This enables schema validation and autocomplete in your editor
+# https://github.com/redhat-developer/yaml-language-server
+
+# For basic usage info, see:
+# https://slumber.lucaspickering.me/getting_started.html
+# For all collection options, see:
+# https://slumber.lucaspickering.me/api/request_collection/index.html
+
+name: My Collection
+
+# Profiles are groups of data you can easily switch between. A common usage is
+# to define profiles for various environments of a REST service
+profiles:
+  example:
+    name: local
+    data:
+      host: http://localhost:5173
+
+requests:
+  create_dummy:
+    name: create match
+    method: POST
+    url: '{{ host }}/api/match'
+    body:
+      type: json
+      data:
+        {
+          video: 'https://youtu.be/hsP7lO_yz7Q?si=-1b9i5V1j6esbpZh',
+          left:
+            {
+              pointPlayerName: 'Lak',
+              team: { pointChar: 'Darius', assistChar: 'Blitzcrank', fuse: '2xAssist' }
+            },
+          right:
+            {
+              pointPlayerName: 'lynx',
+              team: { pointChar: 'Ahri', assistChar: 'Darius', fuse: 'DoubleDown' }
+            }
+        }
+
+  example_get:
+    name: Example GET
+    method: GET
+    url: '{{ host }}/get'
+
+  example_folder:
+    name: Example Folder
+    requests:
+      example_post:
+        name: Example POST
+        method: POST
+        url: '{{ host }}/post'
+        body:
+          type: json
+          data: { 'data': "{{ response('example_get') | jsonpath('$.data') }}" }

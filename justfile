@@ -1,12 +1,8 @@
 default:
   just --list
 
-
-
 dev:
-  npm run dev -- --open
-
-
+  npm rum db:migrate && npm run dev -- --open
 
 format:
   npm run format
