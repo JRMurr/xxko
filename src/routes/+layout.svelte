@@ -3,6 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 	// TODO: use https://mode-watcher.sveco.dev/docs/components/mode-watcher instead
 	import ThemeToggle from '$lib/ThemeToggle.svelte';
+	import CreateMatchModal from '$lib/components/CreateMatchModal.svelte';
 
 	let { children } = $props();
 </script>
@@ -18,6 +19,8 @@
 		class="flex items-center justify-between gap-4 border-b border-neutral-200 p-4 dark:border-neutral-800"
 	>
 		<h1 class="text-base font-semibold">xxko</h1>
+		<CreateMatchModal></CreateMatchModal>
+
 		<ThemeToggle />
 	</header>
 
