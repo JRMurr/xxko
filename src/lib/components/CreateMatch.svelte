@@ -1,10 +1,21 @@
 <script lang="ts">
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
-	import { Field, Control, Label, Description, FieldErrors, Fieldset, Legend } from 'formsnap';
+	import {
+		Field,
+		Control,
+		// TODO: might need to wrap formsnap label with flowbite label
+		// right now all uses of label used to be this
+		// Label as ControlLabel,
+		Description,
+		FieldErrors,
+		Fieldset,
+		Legend
+	} from 'formsnap';
 	import { zod4Client } from 'sveltekit-superforms/adapters'; // <-- client adapter
 	import { matchSchema } from '$lib/schemas';
 	import { CHARACTERS, FUSE, MATCH_SIDE } from '$lib/constants';
+	import { Input, Label, Select } from 'flowbite-svelte';
 
 	let { data }: { data: SuperValidated<Infer<typeof matchSchema>> } = $props();
 
@@ -27,7 +38,7 @@
 		<Control>
 			{#snippet children({ props })}
 				<Label>YouTube URL</Label>
-				<input {...props} placeholder="https://youtu.be/..." bind:value={$formData.video} />
+				<Input {...props} placeholder="https://youtu.be/..." bind:value={$formData.video} />
 			{/snippet}
 		</Control>
 		<!-- <Description>We'll extract the ID; shorts/embed links are fine.</Description> -->
@@ -42,7 +53,7 @@
 				<Control>
 					{#snippet children({ props })}
 						<Label>Point Player</Label>
-						<input {...props} bind:value={$formData[side].pointPlayerName} />
+						<Input {...props} bind:value={$formData[side].pointPlayerName} />
 					{/snippet}
 				</Control>
 				<FieldErrors />
@@ -52,7 +63,7 @@
 				<Control>
 					{#snippet children({ props })}
 						<Label>Assist Player (optional)</Label>
-						<input {...props} bind:value={$formData[side].assistPlayerName} />
+						<Input {...props} bind:value={$formData[side].assistPlayerName} />
 					{/snippet}
 				</Control>
 				<FieldErrors />
@@ -65,9 +76,9 @@
 					<Control>
 						{#snippet children({ props })}
 							<Label>Point Char</Label>
-							<select {...props} bind:value={$formData[side].team.pointChar}>
+							<Select {...props} bind:value={$formData[side].team.pointChar}>
 								{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
-							</select>
+							</Select>
 						{/snippet}
 					</Control>
 					<FieldErrors />
@@ -77,9 +88,9 @@
 					<Control>
 						{#snippet children({ props })}
 							<Label>Assist Char</Label>
-							<select {...props} bind:value={$formData[side].team.assistChar}>
+							<Select {...props} bind:value={$formData[side].team.assistChar}>
 								{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
-							</select>
+							</Select>
 						{/snippet}
 					</Control>
 					<FieldErrors />
@@ -89,9 +100,9 @@
 					<Control>
 						{#snippet children({ props })}
 							<Label>Fuse</Label>
-							<select {...props} bind:value={$formData[side].team.fuse}>
+							<Select {...props} bind:value={$formData[side].team.fuse}>
 								{#each FUSE as f}<option value={f}>{f}</option>{/each}
-							</select>
+							</Select>
 						{/snippet}
 					</Control>
 					<FieldErrors />
@@ -100,6 +111,7 @@
 				<Field {form} name={`${side}.team.charSwapBeforeRound`}>
 					<Control>
 						{#snippet children({ props })}
+							<!-- TODO: checkbox -->
 							<input
 								{...props}
 								type="checkbox"
