@@ -80,9 +80,9 @@
 		onclick={toggleMenu}
 		aria-haspopup="menu"
 		aria-expanded={open}
-		class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-neutral-100
+		class="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-gray-100
            px-3 py-1.5 transition select-none
-           hover:bg-neutral-200 dark:border-gray-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+           hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
 	>
 		<span>{effectiveDark ? '🌙 Dark' : '☀️ Light'}{mode === 'system' ? ' (system)' : ''}</span>
 		<svg viewBox="0 0 20 20" class="h-4 w-4" aria-hidden="true"
@@ -98,25 +98,25 @@
 			tabindex="-1"
 			onkeydown={onMenuKey}
 			class="absolute right-0 z-50 mt-2 w-40 overflow-hidden rounded-lg border
-             border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-neutral-800"
+             border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
 		>
 			<button
 				role="menuitem"
-				class="w-full px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700"
+				class="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
 				onclick={() => choose('system')}
 			>
 				System {mode === 'system' ? '✓' : ''}
 			</button>
 			<button
 				role="menuitem"
-				class="w-full px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700"
+				class="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
 				onclick={() => choose('light')}
 			>
 				Light {mode === 'light' ? '✓' : ''}
 			</button>
 			<button
 				role="menuitem"
-				class="w-full px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700"
+				class="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
 				onclick={() => choose('dark')}
 			>
 				Dark {mode === 'dark' ? '✓' : ''}
