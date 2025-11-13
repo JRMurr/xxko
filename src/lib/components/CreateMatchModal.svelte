@@ -19,7 +19,7 @@
 	// });
 </script>
 
-<Button onclick={() => (open = true)}>Add Match</Button>
-<Modal bind:open title="Add match" size="lg">
+<Button color="alternative" onclick={() => (open = true)}>Add Match</Button>
+<Modal bind:open title="Add match" size="xl">
 	<CreateMatch data={form}></CreateMatch>
 </Modal>

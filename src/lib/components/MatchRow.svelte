@@ -2,6 +2,7 @@
 <script lang="ts">
 	import type { CombinedMatchInfo } from '$lib/server/match';
 	import MatchSideBlock from '$lib/components/MatchRowSide.svelte';
+	import { Card } from 'flowbite-svelte';
 
 	let props = $props<{ match: CombinedMatchInfo }>();
 	const match = props.match;
@@ -30,12 +31,9 @@
 	}
 </script>
 
-<button
-	type="button"
-	onclick={handleClick}
-	aria-label={`Open match ${match.title ?? ''}`}
-	class="flex w-full flex-col gap-1 rounded-2xl border px-5 py-2 text-base shadow-sm focus:ring-2 focus:outline-none"
->
+<!-- 	class="flex w-full flex-col gap-1 rounded-2xl border px-5 py-2 text-base shadow-sm focus:ring-2 focus:outline-none"
+ -->
+<Card onclick={handleClick} horizontal size="xl" aria-label={`Open match ${match.title ?? ''}`}>
 	<!-- TOP ROW -->
 	<div class="flex h-16 w-full flex-row justify-items-center gap-3">
 		<div class="h-full flex-auto basis-5/10">
@@ -59,4 +57,4 @@
 		<span class="tracking-wide uppercase">{match.video.platform}</span>
 		<span>{formatSpan(match.startSec, match.endSec)}</span>
 	</div> -->
-</button>
+</Card>

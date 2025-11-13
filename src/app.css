@@ -1,6 +1,6 @@
 @import 'tailwindcss';
-@plugin '@tailwindcss/forms';
-@plugin '@tailwindcss/typography';
+/* @plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography'; */
 
 @plugin 'flowbite/plugin';
 
@@ -14,23 +14,4 @@
 
 :root {
 	color-scheme: light dark;
-} /* nice-to-have for native UI */
-body {
-	@apply bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100;
-}
-
-/* handle forms in dark mode by default */
-@layer base {
-	:where(input, textarea, select) {
-		@apply border border-neutral-300 bg-white text-neutral-900 placeholder-neutral-500;
-	}
-	.dark :where(input, textarea, select) {
-		@apply border-neutral-700 bg-neutral-800 text-neutral-100 placeholder-neutral-400;
-	}
-
-	/* Nice focused ring in dark mode */
-	.dark :where(input, textarea, select) {
-		--tw-ring-color: theme(colors.indigo.500 / 0.5);
-		--tw-ring-offset-color: theme(colors.neutral.900);
-	}
 }
