@@ -24,7 +24,5 @@
 		<ThemeToggle />
 	</header>
 
-	<main class="p-4">
-		{@render children?.()}
-	</main>
+	{@render children?.()}
 </div>
