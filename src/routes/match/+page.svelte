@@ -10,7 +10,7 @@
 	<MatchFilter />
 
 	<div class="flex flex-col space-y-3">
-		{#each matches as m}
+		{#each matches as m (m.id)}
 			<MatchRow match={m} />
 		{/each}
 	</div>
