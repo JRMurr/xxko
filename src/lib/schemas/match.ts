@@ -174,7 +174,8 @@ export const matchFilterSchema = z
 	.transform((x) => ({
 		...x,
 		character: x.character ?? [],
-		fuse: x.fuse ?? []
+		fuse: x.fuse ?? [],
+		player: x.player ?? ''
 	}));
 
 export type MatchFilter = z.infer<typeof matchFilterSchema>;

@@ -266,7 +266,10 @@ export const getMatches = async (
 	};
 
 	const sideFilters = [
-		filterIf(!!filter.player, sql`${like(player.name, `%${filter.player}%`)}`),
+		filterIf(
+			filter.player && filter.player.length,
+			sql`${like(player.name, `%${filter.player}%`)}`
+		),
 		filterIf(filter.fuse.length, () => sql`${inArray(team.fuse, filter.fuse)}`),
 		filterIf(
 			filter.character.length,

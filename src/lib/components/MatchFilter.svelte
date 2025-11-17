@@ -54,7 +54,7 @@
 
 			const url = `?${searchParams.toString()}`;
 
-			goto(url, { replaceState: true });
+			goto(url, { replaceState: true, keepFocus: true });
 		};
 
 		clearTimeout(debounceHandle);
@@ -68,13 +68,13 @@
 </script>
 
 <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-end">
-	<!-- <Search
+	<Search
 		size="md"
 		bind:value={filters.player}
 		clearable
 		oninput={() => onChange({ debounce: true })}
 		placeholder="Player Name"
-	/> -->
+	/>
 
 	<div class="flex gap-3">
 		<MultiSelect
