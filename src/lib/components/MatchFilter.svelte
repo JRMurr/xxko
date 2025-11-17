@@ -67,30 +67,35 @@
 	};
 </script>
 
-<div class="mb-4 flex flex-col gap-3 md:flex-row md:items-end">
+<div class="mb-4 flex flex-col gap-3">
 	<Search
 		size="md"
 		bind:value={filters.player}
 		clearable
+		class="w-full"
 		oninput={() => onChange({ debounce: true })}
 		placeholder="Player Name"
 	/>
 
-	<div class="flex gap-3">
+	<div class="flex flex-wrap gap-3">
 		<MultiSelect
+			size="md"
 			bind:value={filters.character}
 			items={makeOptionItemArr(CHARACTERS)}
-			class="min-w-32"
+			name="character"
+			class="min-w-32 flex-1"
 			onchange={() => onChange({ debounce: false })}
-		></MultiSelect>
+		/>
 
 		<MultiSelect
+			size="md"
 			bind:value={filters.fuse}
 			items={makeOptionItemArr(FUSE)}
-			class="min-w-32"
+			name="fuse"
+			class="min-w-32 flex-1"
 			onchange={() => onChange({ debounce: false })}
-		></MultiSelect>
-
-		<Button color="light" type="button" onclick={clearFilters}>Clear</Button>
+		/>
 	</div>
+
+	<Button color="light" type="button" class="self-start" onclick={clearFilters}>Clear</Button>
 </div>

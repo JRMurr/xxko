@@ -7,11 +7,20 @@
 </script>
 
 <div class="mx-auto w-full max-w-5xl px-3 sm:w-11/12 md:w-5/6 lg:w-2/3 xl:w-3/5 2xl:w-1/2">
-	<MatchFilter />
+	<!-- Layout wrapper -->
+	<div class="flex flex-col gap-4 md:flex-row">
+		<!-- Left: Filter -->
+		<aside class="md:sticky md:top-4 md:w-64 md:shrink-0">
+			<MatchFilter />
+		</aside>
 
-	<div class="flex flex-col space-y-3">
-		{#each matches as m (m.id)}
-			<MatchRow match={m} />
-		{/each}
+		<!-- Right: Match list -->
+		<main class="flex-1">
+			<div class="flex flex-col space-y-3">
+				{#each matches as m (m.id)}
+					<MatchRow match={m} />
+				{/each}
+			</div>
+		</main>
 	</div>
 </div>
