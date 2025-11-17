@@ -27,7 +27,7 @@ describe('create match', () => {
 		const rightTeam = {
 			pointChar: 'Ekko',
 			assistChar: 'Darius',
-			fuse: 'sidekick',
+			fuse: 'Sidekick',
 			charSwapBeforeRound: true
 		} as const;
 

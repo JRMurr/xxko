@@ -278,7 +278,7 @@ export const getMatches = async (
 		)
 	].filter((maybeFilter) => !!maybeFilter);
 
-	const sideFilterStr = sideFilters.length ? sql.join(sideFilters, sql` or `) : sql`true`;
+	const sideFilterStr = sideFilters.length ? sql.join(sideFilters, sql` and `) : sql`true`;
 
 	// not selected on in final query but filtered on later
 	const sideComputed = {

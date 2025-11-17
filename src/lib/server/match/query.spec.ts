@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { zocker } from 'zocker';
-import { matchSchema, type Match } from '$lib/schemas';
+import { matchFilterSchema, matchSchema, type Match, type MatchFilter } from '$lib/schemas';
 
 import { makeMemoryDb, type TestDb } from '$test/utils';
-import { createMatch, getMatches, type MatchFilter } from '.';
+import { createMatch, getMatches } from '.';
 
 describe('query matches', () => {
 	let ctx: TestDb;
@@ -35,14 +35,14 @@ describe('query matches', () => {
 	});
 
 	it('query no filter', async () => {
-		const res = await getMatches(ctx.db, { limit: numGenerated });
+		const res = await getMatches(ctx.db, matchFilterSchema.parse({ limit: numGenerated }));
 
 		expect(res).toBeDefined();
 		expect(res).toHaveLength(numGenerated);
 	});
 
 	it('query limit', async () => {
-		const res = await getMatches(ctx.db, { limit: 5 });
+		const res = await getMatches(ctx.db, matchFilterSchema.parse({ limit: 5 }));
 
 		expect(res).toBeDefined();
 		expect(res).toHaveLength(5);
@@ -53,33 +53,38 @@ describe('query matches', () => {
 		const filterTests: { name: string; filterFn: () => MatchFilter }[] = [
 			{
 				name: 'player',
-				filterFn: () => ({
-					player: createdMatches[0].left.pointPlayerName
-				})
+				filterFn: () =>
+					matchFilterSchema.parse({
+						player: createdMatches[0].left.pointPlayerName
+					})
 			},
 			{
 				name: 'character - left',
-				filterFn: () => ({
-					character: [createdMatches[0].left.team.pointChar]
-				})
+				filterFn: () =>
+					matchFilterSchema.parse({
+						character: [createdMatches[0].left.team.pointChar]
+					})
 			},
 			{
 				name: 'character - right',
-				filterFn: () => ({
-					character: [createdMatches[0].right.team.pointChar]
-				})
+				filterFn: () =>
+					matchFilterSchema.parse({
+						character: [createdMatches[0].right.team.pointChar]
+					})
 			},
 			{
 				name: 'fuse - left',
-				filterFn: () => ({
-					fuse: [createdMatches[0].left.team.fuse]
-				})
+				filterFn: () =>
+					matchFilterSchema.parse({
+						fuse: [createdMatches[0].left.team.fuse]
+					})
 			},
 			{
 				name: 'fuse - right',
-				filterFn: () => ({
-					fuse: [createdMatches[0].right.team.fuse]
-				})
+				filterFn: () =>
+					matchFilterSchema.parse({
+						fuse: [createdMatches[0].right.team.fuse]
+					})
 			}
 		];
 
