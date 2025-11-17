@@ -64,7 +64,7 @@ CREATE TABLE `team` (
 	`assist_char` text NOT NULL,
 	`fuse` text NOT NULL,
 	`char_swap_before_round` integer,
-	CONSTRAINT "chk_fuse" CHECK("team"."fuse" IN ('juggernaut', 'sidekick', '2xAssist', 'DoubleDown', 'Freestyle'))
+	CONSTRAINT "chk_fuse" CHECK("team"."fuse" IN ('Juggernaut', 'Sidekick', '2xAssist', 'DoubleDown', 'Freestyle'))
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `uq_team_pair` ON `team` (`point_char`,`assist_char`,`fuse`,`char_swap_before_round`);--> statement-breakpoint
