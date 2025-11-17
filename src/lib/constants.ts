@@ -16,7 +16,7 @@ export type Characters = (typeof CHARACTERS)[number];
 export const MATCH_SIDE = ['left', 'right'] as const;
 export type MatchSide = (typeof MATCH_SIDE)[number];
 
-export const FUSE = ['juggernaut', 'sidekick', '2xAssist', 'DoubleDown', 'Freestyle'] as const;
+export const FUSE = ['Juggernaut', 'Sidekick', '2xAssist', 'DoubleDown', 'Freestyle'] as const;
 export type Fuse = (typeof FUSE)[number];
 
 export const VIDEO_PLATFORM = ['youtube', 'twitch'] as const;

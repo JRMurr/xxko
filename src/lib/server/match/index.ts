@@ -11,8 +11,10 @@ import {
 	charSchema,
 	extractYouTubeInfo,
 	fuseSchema,
+	matchFilterSchema,
 	matchSchema,
-	matchSideSchema
+	matchSideSchema,
+	type MatchFilter
 } from '$lib/schemas';
 import { PLAYER_ROLE, type PlayerRole } from '$lib/constants';
 import z from 'zod';
@@ -171,25 +173,6 @@ export const getMatch = async (db: xxDatabase, matchId: number) => {
 		}
 	});
 };
-
-function singleOrArray<T extends z.ZodTypeAny>(inner: T): z.ZodArray<T> {
-	return z
-		.array(inner)
-		.nonempty()
-		.or(inner.transform((x) => [x])) as unknown as z.ZodArray<T>;
-}
-
-export const matchFilterSchema = z
-	.object({
-		character: singleOrArray(charSchema),
-		limit: z.number(),
-		fuse: singleOrArray(fuseSchema),
-		player: z.string().nonempty(),
-		patch: z.string().nonempty()
-	})
-	.partial();
-
-export type MatchFilter = z.infer<typeof matchFilterSchema>;
 
 type ExtractData<T> =
 	T extends SQLiteColumn<infer Inner>
