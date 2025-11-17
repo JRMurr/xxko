@@ -170,6 +170,11 @@ export const matchFilterSchema = z
 		player: z.string().nonempty(),
 		patch: z.string().nonempty()
 	})
-	.partial();
+	.partial()
+	.transform((x) => ({
+		...x,
+		character: x.character ?? [],
+		fuse: x.fuse ?? []
+	}));
 
 export type MatchFilter = z.infer<typeof matchFilterSchema>;

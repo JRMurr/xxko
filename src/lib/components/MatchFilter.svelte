@@ -1,14 +1,10 @@
 <script lang="ts">
-	import { type MatchFilter } from '$lib/schemas';
+	import { matchFilterSchema, type MatchFilter } from '$lib/schemas';
 	import { Search, MultiSelect, Button, type SelectOptionType } from 'flowbite-svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { CHARACTERS, FUSE } from '$lib/constants';
-
-	type Filter = Omit<MatchFilter, 'limit' | 'character' | 'fuse'> & {
-		character: NonNullable<MatchFilter['character']>;
-		fuse: NonNullable<MatchFilter['fuse']>;
-	};
+	import { searchParamsToValues } from '$lib/utils';
 
 	const makeOptionItemArr = <T extends string>(arr: readonly T[]): SelectOptionType<T>[] => {
 		return arr.map((x) => {
@@ -19,66 +15,80 @@
 		});
 	};
 
-	const defaultFilters: Filter = {
-		character: [],
-		fuse: []
-	};
+	const emptyFilter = matchFilterSchema.parse({});
 
-	let filters: Filter = $state(defaultFilters);
+	const startParams = page.url.searchParams;
+
+	const startFilter = matchFilterSchema.parse(searchParamsToValues(startParams));
+
+	let filters: MatchFilter = $state(startFilter);
 
 	const clearFilters = () => {
-		filters = defaultFilters;
-		onChange();
+		filters = emptyFilter;
+		onChange({ debounce: false });
 	};
 
-	const onChange = () => {
-		const searchParams = new URLSearchParams();
+	let debounceHandle: NodeJS.Timeout | undefined;
 
-		(Object.keys(filters) as unknown as (keyof Filter)[]).forEach((k) => {
-			const val = filters[k];
-			if (val) {
-				if (val instanceof Array) {
-					val.forEach((v) => {
-						searchParams.append(k, v);
-					});
-				} else {
-					searchParams.append(k, val);
+	const DEBOUNCE_MS = 500;
+
+	const onChange = ({ debounce }: { debounce: boolean }) => {
+		const update = () => {
+			const searchParams = new URLSearchParams();
+
+			(Object.keys(filters) as unknown as (keyof MatchFilter)[]).forEach((k) => {
+				if (k === 'limit') {
+					return;
 				}
-			}
-		});
+				const val = filters[k];
+				if (val) {
+					if (val instanceof Array) {
+						val.forEach((v) => {
+							searchParams.append(k, v);
+						});
+					} else {
+						searchParams.append(k, val);
+					}
+				}
+			});
 
-		const url = `?${searchParams.toString()}`;
+			const url = `?${searchParams.toString()}`;
 
-		goto(url, { replaceState: true });
+			goto(url, { replaceState: true });
+		};
+
+		clearTimeout(debounceHandle);
+
+		if (debounce) {
+			debounceHandle = setTimeout(update, DEBOUNCE_MS);
+		} else {
+			update();
+		}
 	};
-
-	$inspect(filters);
 </script>
 
 <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-end">
-	<!-- <div class="flex-1">
-		<Search
-			size="md"
-			bind:value={q}
-			clearable
-			on:input={onQueryInput}
-			placeholder="Search matches..."
-		/>
-	</div> -->
+	<!-- <Search
+		size="md"
+		bind:value={filters.player}
+		clearable
+		oninput={() => onChange({ debounce: true })}
+		placeholder="Player Name"
+	/> -->
 
 	<div class="flex gap-3">
 		<MultiSelect
 			bind:value={filters.character}
 			items={makeOptionItemArr(CHARACTERS)}
 			class="min-w-32"
-			onchange={onChange}
+			onchange={() => onChange({ debounce: false })}
 		></MultiSelect>
 
 		<MultiSelect
 			bind:value={filters.fuse}
 			items={makeOptionItemArr(FUSE)}
 			class="min-w-32"
-			onchange={onChange}
+			onchange={() => onChange({ debounce: false })}
 		></MultiSelect>
 
 		<Button color="light" type="button" onclick={clearFilters}>Clear</Button>

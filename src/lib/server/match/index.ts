@@ -7,15 +7,7 @@ import {
 	player
 } from '$lib/server/db/schema';
 import { type xxDatabase } from '$lib/server/db';
-import {
-	charSchema,
-	extractYouTubeInfo,
-	fuseSchema,
-	matchFilterSchema,
-	matchSchema,
-	matchSideSchema,
-	type MatchFilter
-} from '$lib/schemas';
+import { extractYouTubeInfo, matchSchema, matchSideSchema, type MatchFilter } from '$lib/schemas';
 import { PLAYER_ROLE, type PlayerRole } from '$lib/constants';
 import z from 'zod';
 import {
@@ -275,10 +267,11 @@ export const getMatches = async (
 
 	const sideFilters = [
 		filterIf(!!filter.player, sql`${like(player.name, `%${filter.player}%`)}`),
-		filterIf(filter.fuse, (fuse) => sql`${inArray(team.fuse, fuse)}`),
+		filterIf(filter.fuse.length, () => sql`${inArray(team.fuse, filter.fuse)}`),
 		filterIf(
-			filter.character,
-			(chars) => sql`(${inArray(team.pointChar, chars)} or ${inArray(team.assistChar, chars)})`
+			filter.character.length,
+			() =>
+				sql`(${inArray(team.pointChar, filter.character)} or ${inArray(team.assistChar, filter.character)})`
 		)
 	].filter((maybeFilter) => !!maybeFilter);
 
