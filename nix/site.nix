@@ -105,33 +105,6 @@ let
         cp package.json package-lock.json $out
       '';
 
-  # builtSite = buildNpmPackage ({
-  #   inherit src nodejs;
-  #   pname = "xxko";
-  #   version = "0.1.0";
-
-  #   # TODO: how can i pull this logic into a separate drv
-  #   npmDeps = importNpmLock {
-  #     package = lib.importJSON ../package.json;
-  #     packageLock = lib.importJSON ../package-lock.json;
-  #   };
-
-  #   # npmDeps = npmDeps;
-
-  #   npmConfigHook = importNpmLock.npmConfigHook;
-
-  #   installPhase = ''
-  #     runHook preInstall
-
-  #     mkdir -p $out/build $out/node_modules
-  #     cp -r build/* $out/build
-  #     cp -r node_modules/* $out/node_modules
-  #     cp package.json package-lock.json $out
-
-  #     runHook postInstall
-  #   '';
-  # });
-
   run_site = writeShellApplication {
     name = "run-site";
     runtimeInputs = [ nodejs ];
