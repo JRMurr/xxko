@@ -16,6 +16,8 @@
       let
         pkgs = import nixpkgs { inherit system; };
         nodeVersion = pkgs.nodejs;
+
+        myBuilds = pkgs.callPackage ./nix { };
       in
       {
         devShells = {
@@ -32,6 +34,7 @@
 
         packages = {
           default = pkgs.hello;
+          site = myBuilds.site;
         };
       }
     );
