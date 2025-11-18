@@ -33,8 +33,10 @@
         };
 
         packages = {
-          default = pkgs.hello;
           site = myBuilds.site.run_site;
+          docker = myBuilds.site.docker; # https://sekun.net/blog/deploying-nix-builds-on-fly-io/
+
+          # debugging mostly
           site_node_modules = myBuilds.site.node_modules_only_build;
         };
       }

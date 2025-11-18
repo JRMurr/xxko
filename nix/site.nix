@@ -5,6 +5,7 @@
   nodejs,
   writeShellApplication,
   runCommand,
+  dockerTools,
 }:
 let
   fs = lib.fileset;
@@ -113,11 +114,22 @@ let
       node build
     '';
   };
+
+  docker = dockerTools.streamLayeredImage {
+    name = "xxko";
+    tag = "latest";
+
+    contents = [ run_site ];
+
+    config.Cmd = [ "/bin/run-site" ];
+  };
+
 in
 {
   inherit
     run_site
     builtSite
     node_modules_only_build
+    docker
     ;
 }
