@@ -3,6 +3,9 @@
   buildNpmPackage,
   importNpmLock,
   nodejs,
+  coreutils,
+  litestream,
+  writeText,
   writeShellApplication,
   runCommand,
   dockerTools,
@@ -42,6 +45,9 @@ let
     package = lib.importJSON ../package.json;
     packageLock = lib.importJSON ../package-lock.json;
   };
+
+  dataDir = "/data";
+  dbFile = "${dataDir}/xxko.db";
 
   node_modules_only_build = buildNpmPackage ({
     inherit nodejs;
@@ -106,18 +112,55 @@ let
     '';
   };
 
+  litestreamConfig = writeText "litestream.yml" ''
+    dbs:
+      - path: ${dbFile}
+        replicas:
+          - type: s3
+            bucket: ${"$"}{LITESTREAM_BUCKET}
+            path: ${"$"}{LITESTREAM_REPLICA_PATH:-xxko}
+            endpoint: ${"$"}{LITESTREAM_ENDPOINT}
+            region: ${"$"}{LITESTREAM_REGION:-auto}
+            access-key-id: ${"$"}{LITESTREAM_ACCESS_KEY_ID}
+            secret-access-key: ${"$"}{LITESTREAM_SECRET_ACCESS_KEY}
+  '';
+
+  entrypoint = writeShellApplication {
+    name = "entrypoint";
+    runtimeInputs = [
+      coreutils
+      litestream
+      nodejs
+    ];
+    text = ''
+      set -euo pipefail
+
+      mkdir -p ${dataDir}
+
+      export DATABASE_URL="''${DATABASE_URL:-file:${dbFile}}"
+
+      if [ ! -f ${dbFile} ]; then
+        echo "Restoring database from replica (if available)…"
+        litestream restore -if-replica-exists -config ${litestreamConfig} ${dbFile}
+      fi
+
+      exec litestream replicate -config ${litestreamConfig} -exec "${lib.getExe run_site}"
+    '';
+  };
+
   docker = dockerTools.streamLayeredImage {
     name = "xxko";
     tag = "latest";
 
-    contents = [ run_site ];
+    contents = [ entrypoint ];
 
-    config.Cmd = [ "/bin/run-site" ];
+    config.Cmd = [ "/bin/entrypoint" ];
   };
 
 in
 {
   inherit
+    entrypoint
     run_site
     builtSite
     node_modules_only_build
