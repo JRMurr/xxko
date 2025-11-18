@@ -34,7 +34,8 @@
 
         packages = {
           default = pkgs.hello;
-          site = myBuilds.site;
+          site = myBuilds.site.run_site;
+          site_node_modules = myBuilds.site.node_modules_only_build;
         };
       }
     );
