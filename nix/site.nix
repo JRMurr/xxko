@@ -15,12 +15,19 @@ let
   nixFiles = fs.fileFilter (file: lib.hasSuffix ".nix" file.name) ../.;
 
   ignoreFiles = fs.unions [
+    (fs.maybeMissing ../.env)
+    ../.vscode
     ../.env.example
     ../.envrc
-    ../.vscode
+    ../.prettierignore
+    ../.prettierrc
+    ../flake.lock
     ../nix
     ../tests
     ../slumber.yml
+    ../README.md
+    ../Notes.md
+    ../justfile
     nixFiles
   ];
 
@@ -30,19 +37,6 @@ let
     root = ../.;
     fileset = filtered;
   };
-
-  # npmDeps = importNpmLock.buildNodeModules {
-  #   inherit nodejs;
-  #   package = lib.importJSON ../package.json;
-  #   packageLock = lib.importJSON ../package-lock.json;
-  #   # npmRoot = fs.toSource {
-  #   #   root = ../.;
-  #   #   fileset = fs.unions [
-  #   #     ../package.json
-  #   #     ../package-lock.json
-  #   #   ];
-  #   # };
-  # };
 
   npmDeps = importNpmLock {
     package = lib.importJSON ../package.json;
@@ -91,18 +85,15 @@ let
       }
       ''
         cd $(mktemp -d)
-
-        mkdir ./node_modules
-        ls -la
-
         cp -r ${src}/* .
-        cp -r ${node_modules_only_build}/node_modules .
+
+        ln -s ${node_modules_only_build}/node_modules ./node_modules
 
         npm run build
 
-        mkdir -p $out/build $out/node_modules
-        cp -r build/* $out/build
-        cp -r node_modules/* $out/node_modules
+        mkdir -p $out
+        ln -s ${node_modules_only_build}/node_modules $out/node_modules
+        cp -r build $out
         cp package.json package-lock.json $out
       '';
 
