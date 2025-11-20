@@ -9,6 +9,7 @@
   writeShellApplication,
   runCommand,
   dockerTools,
+  nix2container,
 }:
 let
   fs = lib.fileset;
@@ -146,6 +147,11 @@ let
 
       export DATABASE_URL="''${DATABASE_URL:-file:${dbFilePath}}"
 
+      if [ -n "''${SKIP_LITESTREAM:-}" ]; then
+        echo "SKIP_LITESTREAM set, starting app without Litestream"
+        exec ${lib.getExe run_site}
+      fi
+
       if [ ! -f ${dbFilePath} ]; then
         echo "Restoring database from replica (if available)…"
         litestream restore -if-replica-exists -config ${litestreamConfig} ${dbFilePath}
@@ -155,19 +161,48 @@ let
     '';
   };
 
-  docker = dockerTools.streamLayeredImage {
-    name = "xxko";
-    tag = "latest";
+  docker =
+    let
+      # https://blog.eigenvalue.net/2023-nix2container-everything-once/
+      foldImageLayers =
+        let
+          mergeToLayer =
+            priorLayers: component:
+            assert builtins.isList priorLayers;
+            assert builtins.isAttrs component;
+            let
+              layer = nix2container.buildLayer (
+                component
+                // {
+                  layers = priorLayers;
+                }
+              );
+            in
+            priorLayers ++ [ layer ];
+        in
+        layers: lib.foldl mergeToLayer [ ] layers;
 
-    contents = [ entrypoint ];
+    in
+    nix2container.buildImage {
+      name = "xxko";
+      tag = "latest";
 
-    config = {
-      ExposedPorts = {
-        "3000" = { };
+      layers =
+        let
+          layerDefs = [
+            { deps = [ node_modules_only_build ]; }
+            { deps = [ builtSite ]; }
+          ];
+        in
+        foldImageLayers layerDefs;
+
+      config = {
+        ExposedPorts = {
+          "3000" = { };
+        };
+        Cmd = [ "${lib.getExe entrypoint}" ];
       };
-      Cmd = [ "/bin/entrypoint" ];
     };
-  };
 
 in
 {

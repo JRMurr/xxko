@@ -9,7 +9,7 @@ format:
 
 
 load_docker:
-  $(nix build .#docker --no-link --print-out-paths) | docker image load
+  $(nix build .#docker.copyToDockerDaemon --no-link --print-out-paths)/bin/copy-to-docker-daemon
 
 push_docker: load_docker
   docker image tag xxko:latest registry.fly.io/xxko:latest

@@ -2,6 +2,7 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    nix2container.url = "github:nlewo/nix2container";
   };
 
   outputs =
@@ -9,6 +10,7 @@
       self,
       nixpkgs,
       flake-utils,
+      nix2container,
       ...
     }:
     flake-utils.lib.eachDefaultSystem (
@@ -17,7 +19,9 @@
         pkgs = import nixpkgs { inherit system; };
         nodeVersion = pkgs.nodejs;
 
-        myBuilds = pkgs.callPackage ./nix { };
+        nix2containerPkgs = nix2container.packages.x86_64-linux;
+
+        myBuilds = pkgs.callPackage ./nix { nix2container = nix2containerPkgs.nix2container; };
       in
       {
         devShells = {
