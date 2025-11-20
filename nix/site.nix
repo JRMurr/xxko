@@ -121,12 +121,11 @@ let
           path = dbFilePath;
           replicas = [
             {
-              url = "s3://$LITESTREAM_BUCKET/$LITESTREAM_REPLICA_PATH";
-              # type = "s3";
-              # bucket = "\${LITESTREAM_BUCKET}";
-              # path = "\${LITESTREAM_REPLICA_PATH:-xxko}";
-              # endpoint = "\${LITESTREAM_ENDPOINT}";
-              # region = "\${LITESTREAM_REGION:-auto}";
+              # url = "s3://$LITESTREAM_BUCKET/$LITESTREAM_REPLICA_PATH";
+              type = "s3";
+              bucket = "\${LITESTREAM_BUCKET}";
+              path = "\${LITESTREAM_REPLICA_PATH}";
+              endpoint = "\${AWS_ENDPOINT_URL_S3}";
             }
           ];
         }
@@ -186,6 +185,12 @@ let
     nix2container.buildImage {
       name = "xxko";
       tag = "latest";
+
+      # https://nixos.org/manual/nixpkgs/stable/#ssec-pkgs-dockerTools-helpers
+      copyToRoot = [
+        dockerTools.caCertificates
+        dockerTools.binSh
+      ];
 
       layers =
         let

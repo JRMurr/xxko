@@ -6,13 +6,13 @@ primary_region = "iad"
 image = 'registry.fly.io/xxko:latest'
 
 [env]
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = "3000"
 DATABASE_URL = "file:/data/xxko.db"
 AWS_ENDPOINT_URL_S3 = "https://fly.storage.tigris.dev"
 AWS_REGION = "auto"
 LITESTREAM_BUCKET = "wandering-darkness-7981"
-LITESTREAM_REPLICA_PATH = "xxko"
+LITESTREAM_REPLICA_PATH = "xxko_db"
 
 [mounts]
 source = "data"
