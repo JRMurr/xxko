@@ -28,7 +28,7 @@
 		direction === 'right' ? 'flex-row-reverse' : 'flex-row'
 	]}
 >
-	{#each chars as c}
+	{#each chars as c (c)}
 		<img
 			src={charSrc(c)}
 			alt={c}

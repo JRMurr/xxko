@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import { CHARACTERS, FUSE } from '$lib/constants';
 	import { searchParamsToValues } from '$lib/utils';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	const makeOptionItemArr = <T extends string>(arr: readonly T[]): SelectOptionType<T>[] => {
 		return arr.map((x) => {
@@ -34,7 +35,7 @@
 
 	const onChange = ({ debounce }: { debounce: boolean }) => {
 		const update = () => {
-			const searchParams = new URLSearchParams();
+			const searchParams = new SvelteURLSearchParams();
 
 			(Object.keys(filters) as unknown as (keyof MatchFilter)[]).forEach((k) => {
 				if (k === 'limit') {
@@ -54,6 +55,7 @@
 
 			const url = `?${searchParams.toString()}`;
 
+			// eslint-disable-next-line @typescript-eslint/no-floating-promises, svelte/no-navigation-without-resolve
 			goto(url, { replaceState: true, keepFocus: true });
 		};
 

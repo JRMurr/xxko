@@ -7,7 +7,6 @@
 		// TODO: might need to wrap formsnap label with flowbite label
 		// right now all uses of label used to be this
 		// Label as ControlLabel,
-		Description,
 		FieldErrors,
 		Fieldset,
 		Legend
@@ -45,7 +44,7 @@
 		<FieldErrors />
 	</Field>
 
-	{#each MATCH_SIDE as side}
+	{#each MATCH_SIDE as side (side)}
 		<Fieldset {form} name={side}>
 			<Legend>{sideLabel(side)}</Legend>
 
@@ -77,7 +76,7 @@
 						{#snippet children({ props })}
 							<Label>Point Char</Label>
 							<Select {...props} bind:value={$formData[side].team.pointChar}>
-								{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
+								{#each CHARACTERS as c (c)}<option value={c}>{c}</option>{/each}
 							</Select>
 						{/snippet}
 					</Control>
@@ -89,7 +88,7 @@
 						{#snippet children({ props })}
 							<Label>Assist Char</Label>
 							<Select {...props} bind:value={$formData[side].team.assistChar}>
-								{#each CHARACTERS as c}<option value={c}>{c}</option>{/each}
+								{#each CHARACTERS as c (c)}<option value={c}>{c}</option>{/each}
 							</Select>
 						{/snippet}
 					</Control>
@@ -101,7 +100,7 @@
 						{#snippet children({ props })}
 							<Label>Fuse</Label>
 							<Select {...props} bind:value={$formData[side].team.fuse}>
-								{#each FUSE as f}<option value={f}>{f}</option>{/each}
+								{#each FUSE as f (f)}<option value={f}>{f}</option>{/each}
 							</Select>
 						{/snippet}
 					</Control>

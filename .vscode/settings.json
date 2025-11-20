@@ -15,5 +15,6 @@
 		"Yasuo",
 		"youtu",
 		"zocker"
-	]
+	],
+	"eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "svelte"]
 }

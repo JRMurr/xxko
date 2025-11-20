@@ -1,1 +1,5 @@
-<a href="/demo/lucia">lucia</a>
+<script>
+	import { resolve } from '$app/paths';
+</script>
+
+<a href={resolve('/demo/lucia')}>lucia</a>
