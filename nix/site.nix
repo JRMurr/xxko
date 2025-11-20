@@ -29,7 +29,6 @@ let
     ../tests
     ../slumber.yml
     ../README.md
-    ../Notes.md
     ../justfile
     nixFiles
   ];
@@ -47,7 +46,7 @@ let
   };
 
   dataDir = "/data";
-  dbFile = "${dataDir}/xxko.db";
+  dbFilePath = "${dataDir}/xxko.db";
 
   node_modules_only_build = buildNpmPackage ({
     inherit nodejs;
@@ -112,36 +111,44 @@ let
     '';
   };
 
-  litestreamConfig = writeText "litestream.yml" ''
-    dbs:
-      - path: ${dbFile}
-        replicas:
-          - type: s3
-            bucket: ${"$"}{LITESTREAM_BUCKET}
-            path: ${"$"}{LITESTREAM_REPLICA_PATH:-xxko}
-            endpoint: ${"$"}{LITESTREAM_ENDPOINT}
-            region: ${"$"}{LITESTREAM_REGION:-auto}
-            access-key-id: ${"$"}{LITESTREAM_ACCESS_KEY_ID}
-            secret-access-key: ${"$"}{LITESTREAM_SECRET_ACCESS_KEY}
-  '';
+  litestreamConfig = writeText "litestream.yml" (
+    lib.generators.toYAML { } {
+      access-key-id = "\${AWS_ACCESS_KEY_ID}";
+      secret-access-key = "\${AWS_SECRET_ACCESS_KEY}";
+      dbs = [
+        {
+          path = dbFilePath;
+          replicas = [
+            {
+              url = "s3://$LITESTREAM_BUCKET/$LITESTREAM_REPLICA_PATH";
+              # type = "s3";
+              # bucket = "\${LITESTREAM_BUCKET}";
+              # path = "\${LITESTREAM_REPLICA_PATH:-xxko}";
+              # endpoint = "\${LITESTREAM_ENDPOINT}";
+              # region = "\${LITESTREAM_REGION:-auto}";
+            }
+          ];
+        }
+      ];
+    }
+  );
 
   entrypoint = writeShellApplication {
     name = "entrypoint";
     runtimeInputs = [
       coreutils
       litestream
-      nodejs
     ];
     text = ''
       set -euo pipefail
 
       mkdir -p ${dataDir}
 
-      export DATABASE_URL="''${DATABASE_URL:-file:${dbFile}}"
+      export DATABASE_URL="''${DATABASE_URL:-file:${dbFilePath}}"
 
-      if [ ! -f ${dbFile} ]; then
+      if [ ! -f ${dbFilePath} ]; then
         echo "Restoring database from replica (if available)…"
-        litestream restore -if-replica-exists -config ${litestreamConfig} ${dbFile}
+        litestream restore -if-replica-exists -config ${litestreamConfig} ${dbFilePath}
       fi
 
       exec litestream replicate -config ${litestreamConfig} -exec "${lib.getExe run_site}"
@@ -154,7 +161,12 @@ let
 
     contents = [ entrypoint ];
 
-    config.Cmd = [ "/bin/entrypoint" ];
+    config = {
+      ExposedPorts = {
+        "3000" = { };
+      };
+      Cmd = [ "/bin/entrypoint" ];
+    };
   };
 
 in
