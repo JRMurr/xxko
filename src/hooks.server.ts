@@ -1,8 +1,10 @@
 import type { Handle } from '@sveltejs/kit';
 import * as auth from '$lib/server/auth';
-import { createDb } from '$lib/server/db';
+import { createDb, migrateDb } from '$lib/server/db';
 
 const prodDb = createDb();
+
+await migrateDb(prodDb);
 
 const handleAuth: Handle = async ({ event, resolve }) => {
 	const sessionToken = event.cookies.get(auth.sessionCookieName);

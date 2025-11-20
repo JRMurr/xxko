@@ -31,6 +31,7 @@ let
     ../slumber.yml
     ../README.md
     ../justfile
+    ../fly.toml
     nixFiles
   ];
 
@@ -100,6 +101,7 @@ let
         mkdir -p $out
         ln -s ${node_modules_only_build}/node_modules $out/node_modules
         cp -r build $out
+        cp -r drizzle $out
         cp package.json package-lock.json $out
       '';
 
@@ -107,7 +109,9 @@ let
     name = "run-site";
     runtimeInputs = [ nodejs ];
     text = ''
+      set -x
       cd ${builtSite}
+      export DRIZZLE_MIGRATIONS_FOLDER="${builtSite}/drizzle"
       node build
     '';
   };

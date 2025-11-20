@@ -1,4 +1,5 @@
 import { drizzle } from 'drizzle-orm/libsql';
+import { migrate } from 'drizzle-orm/libsql/migrator';
 import * as schema from './schema';
 import { env } from '$env/dynamic/private';
 import { createClient, type Client } from '@libsql/client';
@@ -15,3 +16,8 @@ export const createDbFromClient = (client: Client) => {
 };
 
 export type xxDatabase = ReturnType<typeof createDbFromClient>;
+
+export const migrateDb = async (db: xxDatabase) => {
+	const migrationsFolder = env.DRIZZLE_MIGRATIONS_FOLDER ?? 'drizzle';
+	return await migrate(db, { migrationsFolder });
+};
