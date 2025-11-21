@@ -346,11 +346,17 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 	};
 
 	const get_rows = async () => {
+		const limit = filter.limit ?? 10;
+		const page = filter.page ?? 1;
+		const offset = (page - 1) * limit;
+
 		const row_query = sql`
-		SELECT * from (${base_query})
-		ORDER by match_created_at DESC
-		LIMIT ${filter.limit ?? 10}
-	`;
+			SELECT * from (${base_query})
+			ORDER by match_created_at DESC
+			LIMIT ${limit}
+			OFFSET ${offset}
+		`;
+
 		const rows: RawGetRow[] = await db.all(row_query);
 
 		return rows.map((r): CombinedMatchInfo => {
