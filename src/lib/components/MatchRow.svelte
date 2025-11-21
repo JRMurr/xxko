@@ -35,7 +35,7 @@
  -->
 <Card onclick={handleClick} horizontal size="xl" aria-label={`Open match ${match.title ?? ''}`}>
 	<!-- TOP ROW -->
-	<div class="flex h-16 w-full flex-row justify-items-center gap-3">
+	<div class="flex h-32 w-full flex-row justify-items-center gap-3">
 		<div class="h-full flex-auto basis-5/10">
 			<MatchSideBlock side={match.leftSide} direction="left" />
 		</div>
