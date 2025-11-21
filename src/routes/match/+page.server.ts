@@ -6,7 +6,7 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const vals = matchFilterSchema.parse(searchParamsToValues(url.searchParams));
 
-	const limit = 2;
+	const limit = 10;
 
 	const { rows: matches, totalCount: totalMatches } = await getMatches(locals.db, {
 		...vals,
