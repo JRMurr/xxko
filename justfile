@@ -7,6 +7,13 @@ dev:
 format:
   npm run format
 
+lint: 
+  npm run lint
+
+test:
+  npm run test:unit -- --run
+
+ci: lint test
 
 load_docker:
   $(nix build .#docker.copyToDockerDaemon --no-link --print-out-paths)/bin/copy-to-docker-daemon
