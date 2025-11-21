@@ -21,19 +21,26 @@
 	const startParams = page.url.searchParams;
 
 	const startFilter = matchFilterSchema.parse(searchParamsToValues(startParams));
+	const initialPageNum = startFilter.page ?? 1;
 
 	let filters: MatchFilter = $state(startFilter);
 
+	let {
+		pageNum = $bindable(initialPageNum)
+	}: {
+		pageNum: number;
+	} = $props();
+
 	const clearFilters = () => {
 		filters = emptyFilter;
-		onChange({ debounce: false });
+		onChange({ debounce: false, resetPage: true });
 	};
 
 	let debounceHandle: NodeJS.Timeout | undefined;
 
 	const DEBOUNCE_MS = 500;
 
-	const onChange = ({ debounce }: { debounce: boolean }) => {
+	const updateSearchParams = ({ debounce }: { debounce: boolean }) => {
 		const update = () => {
 			const searchParams = new SvelteURLSearchParams();
 
@@ -41,6 +48,10 @@
 				if (k === 'limit') {
 					return;
 				}
+				if (k === 'page') {
+					return;
+				}
+
 				const val = filters[k];
 				if (val) {
 					if (val instanceof Array) {
@@ -52,6 +63,8 @@
 					}
 				}
 			});
+
+			searchParams.set('page', pageNum.toString());
 
 			const url = `?${searchParams.toString()}`;
 
@@ -67,6 +80,32 @@
 			update();
 		}
 	};
+
+	let lastPageNum = pageNum;
+
+	const onChange = ({
+		debounce,
+		resetPage = false
+	}: {
+		debounce: boolean;
+		resetPage?: boolean;
+	}) => {
+		if (resetPage && pageNum !== 1) {
+			pageNum = 1;
+		}
+
+		updateSearchParams({ debounce });
+	};
+
+	$effect(() => {
+		if (pageNum === lastPageNum) {
+			return;
+		}
+
+		lastPageNum = pageNum;
+
+		updateSearchParams({ debounce: false });
+	});
 </script>
 
 <div class="mb-4 flex flex-col gap-3">
@@ -75,7 +114,7 @@
 		bind:value={filters.player}
 		clearable
 		class="w-full"
-		oninput={() => onChange({ debounce: true })}
+		oninput={() => onChange({ debounce: true, resetPage: true })}
 		placeholder="Player Name"
 	/>
 
@@ -86,7 +125,7 @@
 			items={makeOptionItemArr(CHARACTERS)}
 			name="character"
 			class="min-w-32 flex-1"
-			onchange={() => onChange({ debounce: false })}
+			onchange={() => onChange({ debounce: false, resetPage: true })}
 		/>
 
 		<MultiSelect
@@ -95,7 +134,7 @@
 			items={makeOptionItemArr(FUSE)}
 			name="fuse"
 			class="min-w-32 flex-1"
-			onchange={() => onChange({ debounce: false })}
+			onchange={() => onChange({ debounce: false, resetPage: true })}
 		/>
 	</div>
 
