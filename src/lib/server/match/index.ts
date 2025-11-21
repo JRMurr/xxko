@@ -333,8 +333,9 @@ export const getMatches = async (
 		from matchVideo
 		left join sideInfo as leftSideInfo on leftSideInfo.id = matchVideo.match_left_side_id
 		left join sideInfo as rightSideInfo on rightSideInfo.id = matchVideo.match_right_side_id
-		where ${getSideField('left', 'side_filter')} = true or ${getSideField('right', 'side_filter')} = true
-		limit ${filter.limit ?? 10}
+		WHERE ${getSideField('left', 'side_filter')} = true or ${getSideField('right', 'side_filter')} = true
+		ORDER by match_created_at DESC
+		LIMIT ${filter.limit ?? 10}
 	`;
 
 	const rows: RawGetRow[] = await db.all(query);
