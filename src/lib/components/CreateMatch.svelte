@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import type { SuperValidated, Infer, FormOptions } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
 	import {
 		Field,
@@ -16,11 +16,18 @@
 	import { CHARACTERS, FUSE, MATCH_SIDE } from '$lib/constants';
 	import { Input, Label, Select } from 'flowbite-svelte';
 
-	let { data }: { data: SuperValidated<Infer<typeof matchSchema>> } = $props();
+	let {
+		data,
+		onResult = () => {}
+	}: {
+		data: SuperValidated<Infer<typeof matchSchema>>;
+		onResult?: FormOptions['onResult'];
+	} = $props();
 
 	const form = superForm(data, {
 		validators: zod4Client(matchSchema),
-		dataType: 'json'
+		dataType: 'json',
+		onResult
 	});
 
 	const { form: formData, enhance, message } = form;
