@@ -25,7 +25,7 @@
 <div class="flex h-full flex-col items-center gap-1">
 	<div
 		class={[
-			'flex h-1/2 w-full place-content-center items-center gap-2',
+			'flex h-1/2 w-full place-content-center items-center gap-2 pt-2',
 			direction === 'right' ? 'flex-row-reverse' : 'flex-row'
 		]}
 	>
@@ -34,7 +34,7 @@
 				src={charSrc(c)}
 				alt={c}
 				title={c}
-				class="flex h-[70%] w-auto basis-1/4 rounded-lg object-contain"
+				class="flex h-[95%] w-auto basis-1/4 rounded-lg object-contain"
 				loading="lazy"
 			/>
 		{/each}
