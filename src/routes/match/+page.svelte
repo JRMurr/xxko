@@ -1,7 +1,7 @@
 <script lang="ts">
 	import MatchRow from '$lib/components/MatchRow.svelte';
 	import MatchFilter from '$lib/components/MatchFilter.svelte';
-	import { PaginationNav } from 'flowbite-svelte';
+	import PaginationNav from 'flowbite-svelte/PaginationNav.svelte';
 	import { page } from '$app/state';
 
 	const initialPage = Number(page.url.searchParams.get('page')) || 1;

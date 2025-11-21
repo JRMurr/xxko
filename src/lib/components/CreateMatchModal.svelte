@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Button, Modal } from 'flowbite-svelte';
+	import Button from 'flowbite-svelte/Button.svelte';
+	import Modal from 'flowbite-svelte/Modal.svelte';
 
 	import { zod4 } from 'sveltekit-superforms/adapters'; // <-- client adapter
 	import { defaults } from 'sveltekit-superforms';

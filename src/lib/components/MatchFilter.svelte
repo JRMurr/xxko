@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { matchFilterSchema, type MatchFilter } from '$lib/schemas';
-	import { Search, MultiSelect, Button, type SelectOptionType } from 'flowbite-svelte';
+	import Button from 'flowbite-svelte/Button.svelte';
+	import MultiSelect from 'flowbite-svelte/MultiSelect.svelte';
+	import Search from 'flowbite-svelte/Search.svelte';
+	import type { SelectOptionType } from 'flowbite-svelte/types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { CHARACTERS, FUSE } from '$lib/constants';

@@ -14,7 +14,9 @@
 	import { zod4Client } from 'sveltekit-superforms/adapters'; // <-- client adapter
 	import { matchSchema } from '$lib/schemas';
 	import { CHARACTERS, FUSE, MATCH_SIDE } from '$lib/constants';
-	import { Input, Label, Select } from 'flowbite-svelte';
+	import Input from 'flowbite-svelte/Input.svelte';
+	import Label from 'flowbite-svelte/Label.svelte';
+	import Select from 'flowbite-svelte/Select.svelte';
 
 	let {
 		data,

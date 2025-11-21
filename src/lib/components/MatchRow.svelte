@@ -2,7 +2,7 @@
 <script lang="ts">
 	import type { CombinedMatchInfo } from '$lib/server/match';
 	import MatchSideBlock from '$lib/components/MatchRowSide.svelte';
-	import { Card } from 'flowbite-svelte';
+	import Card from 'flowbite-svelte/Card.svelte';
 
 	let props = $props<{ match: CombinedMatchInfo }>();
 	const match = props.match;
