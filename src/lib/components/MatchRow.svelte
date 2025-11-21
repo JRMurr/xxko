@@ -40,21 +40,10 @@
 			<MatchSideBlock side={match.leftSide} direction="left" />
 		</div>
 
-		<span class=" shrink-0 self-center px-3 font-semibold">vs</span>
+		<span class="shrink-0 self-center px-3 font-semibold">vs</span>
 
 		<div class="h-full w-5/10 flex-auto basis-5/10">
 			<MatchSideBlock side={match.rightSide} direction="right" />
 		</div>
 	</div>
-
-	<!-- META ROW -->
-	<!-- <div class="text-muted-foreground mt-1 flex w-full gap-3 text-xs md:text-sm">
-		{#if match.title}
-			<span class="text-foreground/90 hidden truncate align-middle md:inline">
-				{match.title}
-			</span>
-		{/if}
-		<span class="tracking-wide uppercase">{match.video.platform}</span>
-		<span>{formatSpan(match.startSec, match.endSec)}</span>
-	</div> -->
 </Card>

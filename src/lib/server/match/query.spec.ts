@@ -38,14 +38,16 @@ describe('query matches', () => {
 		const res = await getMatches(ctx.db, matchFilterSchema.parse({ limit: numGenerated }));
 
 		expect(res).toBeDefined();
-		expect(res).toHaveLength(numGenerated);
+		expect(res.rows).toHaveLength(numGenerated);
+		expect(res.totalCount).toEqual(numGenerated);
 	});
 
 	it('query limit', async () => {
 		const res = await getMatches(ctx.db, matchFilterSchema.parse({ limit: 5 }));
 
 		expect(res).toBeDefined();
-		expect(res).toHaveLength(5);
+		expect(res.rows).toHaveLength(5);
+		expect(res.totalCount).toEqual(numGenerated);
 	});
 
 	describe('filter', () => {
@@ -97,8 +99,9 @@ describe('query matches', () => {
 			const res = await getMatches(ctx.db, filter);
 
 			expect(res).toBeDefined();
-			expect(res.length).toBeGreaterThan(0);
-			expect(res.length).toBeLessThan(numGenerated);
+			expect(res.rows.length).toBeGreaterThan(0);
+			expect(res.rows.length).toBeLessThan(numGenerated);
+			expect(res.totalCount).toBeLessThan(numGenerated);
 		});
 	});
 });

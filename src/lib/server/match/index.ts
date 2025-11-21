@@ -246,10 +246,12 @@ const playerSchema = z
 	})
 	.transform(({ name, role }) => ({ player: { name }, role }));
 
-export const getMatches = async (
-	db: xxDatabase,
-	filter: MatchFilter
-): Promise<CombinedMatchInfo[]> => {
+type GetMatchRes = {
+	rows: CombinedMatchInfo[];
+	totalCount: number;
+};
+
+export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<GetMatchRes> => {
 	const filterIf = <T, FilterFn extends (x: T) => SQL<undefined>>(
 		cond: T | undefined,
 		filter: SQL<undefined> | FilterFn
@@ -322,7 +324,7 @@ export const getMatches = async (
 		sql`, `
 	);
 
-	const query = sql`
+	const base_query = sql`
 		WITH 
 			sideInfo as ${sideSubquery},
 			matchVideo as ${matchVideo}
@@ -334,44 +336,63 @@ export const getMatches = async (
 		left join sideInfo as leftSideInfo on leftSideInfo.id = matchVideo.match_left_side_id
 		left join sideInfo as rightSideInfo on rightSideInfo.id = matchVideo.match_right_side_id
 		WHERE ${getSideField('left', 'side_filter')} = true or ${getSideField('right', 'side_filter')} = true
+	`;
+
+	const get_count = async () => {
+		const count_query = sql`SELECT count(1) as count from (${base_query})`;
+
+		const res: { count: number } = await db.get(count_query);
+		return res.count;
+	};
+
+	const get_rows = async () => {
+		const row_query = sql`
+		SELECT * from (${base_query})
 		ORDER by match_created_at DESC
 		LIMIT ${filter.limit ?? 10}
 	`;
+		const rows: RawGetRow[] = await db.all(row_query);
 
-	const rows: RawGetRow[] = await db.all(query);
-
-	return rows.map((r): CombinedMatchInfo => {
-		const get_side = (side: 'left' | 'right') => {
-			const k = <K extends keyof SideSelectTypes>(key: K) => r[`${side}_${key}`];
-			return {
-				team: {
-					id: k('id'),
-					pointChar: k('point_char'),
-					assistChar: k('assist_char'),
-					charSwapBeforeRound: k('char_swap'),
-					fuse: k('fuse')
-				},
-				sidePlayers: z.array(playerSchema).parse(JSON.parse(k('players')))
+		return rows.map((r): CombinedMatchInfo => {
+			const get_side = (side: 'left' | 'right') => {
+				const k = <K extends keyof SideSelectTypes>(key: K) => r[`${side}_${key}`];
+				return {
+					team: {
+						id: k('id'),
+						pointChar: k('point_char'),
+						assistChar: k('assist_char'),
+						charSwapBeforeRound: k('char_swap'),
+						fuse: k('fuse')
+					},
+					sidePlayers: z.array(playerSchema).parse(JSON.parse(k('players')))
+				};
 			};
-		};
 
-		return {
-			context: r.match_context,
-			created_at: r.match_created_at,
-			startSec: r.match_start_sec,
-			endSec: r.match_end_sec,
-			id: r.match_id,
-			notes: r.match_notes,
-			patch: r.match_patch,
-			title: r.match_title,
-			video: {
-				id: r.video_id,
-				url: r.video_url,
-				externalId: r.video_external_id,
-				platform: r.video_platform
-			},
-			leftSide: get_side('left'),
-			rightSide: get_side('right')
-		};
-	});
+			return {
+				context: r.match_context,
+				created_at: r.match_created_at,
+				startSec: r.match_start_sec,
+				endSec: r.match_end_sec,
+				id: r.match_id,
+				notes: r.match_notes,
+				patch: r.match_patch,
+				title: r.match_title,
+				video: {
+					id: r.video_id,
+					url: r.video_url,
+					externalId: r.video_external_id,
+					platform: r.video_platform
+				},
+				leftSide: get_side('left'),
+				rightSide: get_side('right')
+			};
+		});
+	};
+
+	const [rows, totalCount] = await Promise.all([get_rows(), get_count()]);
+
+	return {
+		rows,
+		totalCount
+	};
 };

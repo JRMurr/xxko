@@ -48,7 +48,7 @@
 							searchParams.append(k, v);
 						});
 					} else {
-						searchParams.append(k, val);
+						searchParams.append(k, val.toString());
 					}
 				}
 			});

@@ -166,6 +166,7 @@ export const matchFilterSchema = z
 	.object({
 		character: singleOrArray(charSchema),
 		limit: z.number(),
+		page: z.number(),
 		fuse: singleOrArray(fuseSchema),
 		player: z.string().nonempty(),
 		patch: z.string().nonempty()
