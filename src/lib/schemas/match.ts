@@ -78,29 +78,6 @@ export const fuseSchema = z.enum(FUSE);
 
 /** ---------- schemas ---------- */
 
-export const teamSchema = z
-	.object({
-		pointChar: charSchema,
-		assistChar: charSchema,
-		fuse: fuseSchema,
-		charSwapBeforeRound: z.boolean().optional()
-	})
-	.superRefine((x, ctx) => {
-		if (x.pointChar === x.assistChar) {
-			ctx.addIssue({
-				code: 'custom',
-				message: `pointChar and assistChar must be different. Both were (${x.pointChar})`,
-				path: ['assistChar'] // point error at one field (adjust if you prefer ['pointChar'])
-			});
-		}
-	});
-
-export const matchSideSchema = z.object({
-	team: teamSchema,
-	pointPlayerName: z.string(),
-	assistPlayerName: z.string().optional()
-});
-
 /**
  * Input: { url: string }
  * Output (on success): { externalId: string; url: string; start_time?: number }
@@ -131,22 +108,60 @@ export const matchSideSchema = z.object({
 // 	})
 // 	.prefault({ url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' });
 
-export const videoSchema = z
-	.url()
-	.refine((x) => !!extractYouTubeInfo(x), { error: 'Url did not contain a YouTube video id' });
+const getSchemas = (hackyDefaultEnums = false) => {
+	// to make super forms not auto pick an enum field we need to chop up the schema a bit
+	// https://superforms.rocks/default-values#enums-and-group-inputs
 
-// We need a default value here or the ui will be sad since it will be acting on an undefined on first load (due to the transform)
-// .default({
-// 	url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-// 	start_time: 0,
-// 	externalId: 'dQw4w9WgXcQ'
-// });
+	const defaultEnum = hackyDefaultEnums
+		? <EnumVals extends z.util.EnumLike, T extends z.ZodEnum<EnumVals>>(x: T) => {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				return x.default('' as any);
+			}
+		: <EnumVals extends z.util.EnumLike, T extends z.ZodEnum<EnumVals>>(x: T) => x;
 
-export const matchSchema = z.object({
-	video: videoSchema,
-	left: matchSideSchema,
-	right: matchSideSchema
-});
+	const teamSchema = z
+		.object({
+			pointChar: defaultEnum(charSchema),
+			assistChar: defaultEnum(charSchema),
+			fuse: defaultEnum(fuseSchema),
+			charSwapBeforeRound: z.boolean().optional()
+		})
+		.superRefine((x, ctx) => {
+			if (x.pointChar === x.assistChar) {
+				ctx.addIssue({
+					code: 'custom',
+					message: `pointChar and assistChar must be different. Both were (${x.pointChar})`,
+					path: ['assistChar'] // point error at one field (adjust if you prefer ['pointChar'])
+				});
+			}
+		});
+
+	const matchSideSchema = z.object({
+		team: teamSchema,
+		pointPlayerName: z.string().min(1),
+		assistPlayerName: z.string().optional()
+	});
+	const videoSchema = z
+		.url()
+		.refine((x) => !!extractYouTubeInfo(x), { error: 'Url did not contain a YouTube video id' });
+
+	const matchSchema = z.object({
+		video: videoSchema,
+		left: matchSideSchema,
+		right: matchSideSchema
+	});
+
+	return {
+		teamSchema,
+		matchSideSchema,
+		videoSchema,
+		matchSchema
+	};
+};
+
+export const { teamSchema, matchSideSchema, videoSchema, matchSchema } = getSchemas();
+
+export const { matchSchema: uiDefaultedMatchSchema } = getSchemas(true);
 
 /** ---------- Types (optional, for convenience) ---------- */
 
