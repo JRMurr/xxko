@@ -126,6 +126,7 @@
 			size="md"
 			bind:value={filters.character}
 			items={makeOptionItemArr(CHARACTERS)}
+			placeholder="Filter by character"
 			name="character"
 			class="min-w-32 flex-1"
 			onchange={() => onChange({ debounce: false, resetPage: true })}
@@ -135,6 +136,7 @@
 			size="md"
 			bind:value={filters.fuse}
 			items={makeOptionItemArr(FUSE)}
+			placeholder="Filter by fuse"
 			name="fuse"
 			class="min-w-32 flex-1"
 			onchange={() => onChange({ debounce: false, resetPage: true })}
