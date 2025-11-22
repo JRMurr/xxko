@@ -18,7 +18,6 @@
 	<header
 		class="flex items-center justify-between gap-4 border-b border-neutral-200 p-4 dark:border-gray-800"
 	>
-		<h1 class="text-base font-semibold">xxko</h1>
 		<CreateMatchModal></CreateMatchModal>
 
 		<ThemeToggle />
