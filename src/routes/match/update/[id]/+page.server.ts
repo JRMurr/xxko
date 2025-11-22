@@ -4,7 +4,7 @@ import {
 	type CombinedMatchInfo,
 	updateMatch
 } from '$lib/server/match';
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
@@ -42,7 +42,7 @@ const combinedMatchToMatchInput = (m: CombinedMatchInfo): MatchInput => {
 	};
 };
 
-export const load: PageServerLoad = async ({ locals, params }) => {
+export const load: PageServerLoad = async ({ url, locals, params }) => {
 	const match = await getMatch(locals.db, Number(params.id));
 
 	if (!match) error(404, 'Not found');
@@ -50,7 +50,12 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const matchInfo = combinedMatchToMatchInput(match);
 
 	const form = await superValidate(matchInfo, zod4(matchSchema));
-	return { form };
+	const redirectTo = url.searchParams.get('redirectTo') ?? '/match';
+
+	return {
+		form,
+		redirectTo
+	};
 };
 
 export const actions = {
@@ -68,13 +73,8 @@ export const actions = {
 
 		try {
 			await updateMatch(event.locals.db, id, form.data);
-
-			// Option 1: redirect to detail page (classic post/redirect/get)
-			// throw redirect(303, `/widgets/${widget.id}`);
-
-			// Option 2: keep user on page and show a success flash (AJAX-friendly)
-			return message(form, 'Updated!');
 		} catch (e: unknown) {
+			console.log(e);
 			if (e instanceof DuplicateMatchError) {
 				return error(400, { message: e.message });
 			}
@@ -88,5 +88,8 @@ export const actions = {
 
 			return message(form, msgText, { status });
 		}
+
+		const redirectTo = event.url.searchParams.get('redirectTo') ?? '/match';
+		throw redirect(303, redirectTo);
 	}
 } satisfies Actions;

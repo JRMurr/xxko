@@ -3,7 +3,8 @@
 	import type { PageProps } from './$types';
 
 	let { data, params }: PageProps = $props();
+
+	const action = `/match/update/${params.id}?redirectTo=${encodeURIComponent(data.redirectTo)}`;
 </script>
 
-<CreateMatch data={data.form} action={`/match/update/${params.id}`} submitLabel="Update"
-></CreateMatch>
+<CreateMatch data={data.form} {action} submitLabel="Update"></CreateMatch>
