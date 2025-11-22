@@ -12,6 +12,7 @@ import { PLAYER_ROLE, type PlayerRole } from '$lib/constants';
 import z from 'zod';
 import {
 	and,
+	DrizzleQueryError,
 	eq,
 	inArray,
 	like,
@@ -21,6 +22,15 @@ import {
 	type ColumnDataType
 } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { LibsqlError } from '@libsql/client';
+
+export class DuplicateMatchError extends Error {
+	constructor(id: string, start_time: number) {
+		super(`Match with video_id (${id}) and start time (${start_time}). Already exists`);
+		this.name = 'DuplicateMatchError';
+		Object.setPrototypeOf(this, DuplicateMatchError.prototype);
+	}
+}
 
 export const createMatch = (db: xxDatabase, matchInfo: z.infer<typeof matchSchema>) =>
 	db.transaction(
@@ -115,17 +125,33 @@ export const createMatch = (db: xxDatabase, matchInfo: z.infer<typeof matchSchem
 			const leftSideId = await handleSide(matchInfo.left);
 			const rightSideId = await handleSide(matchInfo.right);
 
-			const [{ matchId }] = await tx
-				.insert(match)
-				.values({
-					leftSideId,
-					rightSideId,
-					videoId,
-					startSec: youtubeInfo.start ?? 0
-				})
-				.returning({ matchId: match.id });
+			const startSec = youtubeInfo.start ?? 0;
+			try {
+				const [{ matchId }] = await tx
+					.insert(match)
+					.values({
+						leftSideId,
+						rightSideId,
+						videoId,
+						startSec
+					})
+					.returning({ matchId: match.id });
+				return matchId;
+			} catch (err: unknown) {
+				if (!(err instanceof DrizzleQueryError)) {
+					throw err;
+				}
 
-			return matchId;
+				const cause = err.cause;
+				if (!(cause instanceof LibsqlError)) {
+					throw err;
+				}
+				if (cause.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+					throw new DuplicateMatchError(videoInfo.externalId, startSec);
+				}
+
+				throw err;
+			}
 		},
 		{ behavior: 'immediate' }
 	);

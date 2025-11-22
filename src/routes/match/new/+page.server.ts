@@ -1,4 +1,4 @@
-import { createMatch } from '$lib/server/match';
+import { createMatch, DuplicateMatchError } from '$lib/server/match';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, message } from 'sveltekit-superforms';
@@ -32,7 +32,10 @@ export const actions = {
 			if (e instanceof Error) {
 				msgText = e.message;
 			}
-			return message(form, msgText, { status: 500 });
+
+			const status = e instanceof DuplicateMatchError ? 400 : 500;
+
+			return message(form, msgText, { status });
 		}
 	}
 } satisfies Actions;
