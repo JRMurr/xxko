@@ -4,4 +4,4 @@
 	let { data } = $props();
 </script>
 
-<CreateMatch data={data.form}></CreateMatch>
+<CreateMatch data={data.form} action="/match/new" submitLabel="Submit"></CreateMatch>

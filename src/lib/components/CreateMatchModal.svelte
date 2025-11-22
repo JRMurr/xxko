@@ -21,5 +21,5 @@
 
 <Button color="alternative" onclick={() => (open = true)}>Add Match</Button>
 <Modal bind:open title="Add match" size="xl">
-	<CreateMatch data={form} {onResult}></CreateMatch>
+	<CreateMatch data={form} {onResult} action="/match/new" submitLabel="Submit"></CreateMatch>
 </Modal>

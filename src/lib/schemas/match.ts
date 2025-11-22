@@ -151,7 +151,13 @@ const getSchemas = (hackyDefaultEnums = false) => {
 		right: matchSideSchema
 	});
 
+	const matchUpdateSchema = z.object({
+		matchId: z.number(),
+		matchInfo: matchSchema
+	});
+
 	return {
+		matchUpdateSchema,
 		teamSchema,
 		matchSideSchema,
 		videoSchema,
@@ -159,7 +165,8 @@ const getSchemas = (hackyDefaultEnums = false) => {
 	};
 };
 
-export const { teamSchema, matchSideSchema, videoSchema, matchSchema } = getSchemas();
+export const { teamSchema, matchSideSchema, videoSchema, matchSchema, matchUpdateSchema } =
+	getSchemas();
 
 export const { matchSchema: uiDefaultedMatchSchema } = getSchemas(true);
 

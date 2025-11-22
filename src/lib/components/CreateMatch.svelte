@@ -1,17 +1,8 @@
 <script lang="ts">
 	import type { SuperValidated, Infer, FormOptions } from 'sveltekit-superforms';
 	import { superForm } from 'sveltekit-superforms';
-	import {
-		Field,
-		Control,
-		// TODO: might need to wrap formsnap label with flowbite label
-		// right now all uses of label used to be this
-		// Label as ControlLabel,
-		FieldErrors,
-		Fieldset,
-		Legend
-	} from 'formsnap';
-	import { zod4Client } from 'sveltekit-superforms/adapters'; // <-- client adapter
+	import { Field, Control, FieldErrors, Fieldset, Legend } from 'formsnap';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { matchSchema } from '$lib/schemas';
 	import { CHARACTERS, FUSE, MATCH_SIDE } from '$lib/constants';
 	import Input from 'flowbite-svelte/Input.svelte';
@@ -20,10 +11,15 @@
 
 	let {
 		data,
-		onResult = () => {}
+		onResult = () => {},
+		// new props to allow reuse for update
+		action,
+		submitLabel
 	}: {
 		data: SuperValidated<Infer<typeof matchSchema>>;
 		onResult?: FormOptions['onResult'];
+		action: string;
+		submitLabel: string;
 	} = $props();
 
 	const form = superForm(data, {
@@ -40,7 +36,7 @@
 	const sideLabel = (s: (typeof MATCH_SIDE)[number]) => (s === 'left' ? 'Left Side' : 'Right Side');
 </script>
 
-<form use:enhance class="mx-auto flex max-w-3xl flex-col gap-6" method="POST" action="/match/new">
+<form use:enhance class="mx-auto flex max-w-3xl flex-col gap-6" method="POST" {action}>
 	{#if $message}
 		<div class="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
 			{$message}
@@ -54,7 +50,6 @@
 				<Input {...props} placeholder="https://youtu.be/..." bind:value={$formData.video} />
 			{/snippet}
 		</Control>
-		<!-- <Description>We'll extract the ID; shorts/embed links are fine.</Description> -->
 		<FieldErrors />
 	</Field>
 
@@ -90,7 +85,9 @@
 						{#snippet children({ props })}
 							<Label>Point Char</Label>
 							<Select {...props} bind:value={$formData[side].team.pointChar}>
-								{#each CHARACTERS as c (c)}<option value={c}>{c}</option>{/each}
+								{#each CHARACTERS as c (c)}
+									<option value={c}>{c}</option>
+								{/each}
 							</Select>
 						{/snippet}
 					</Control>
@@ -102,7 +99,9 @@
 						{#snippet children({ props })}
 							<Label>Assist Char</Label>
 							<Select {...props} bind:value={$formData[side].team.assistChar}>
-								{#each CHARACTERS as c (c)}<option value={c}>{c}</option>{/each}
+								{#each CHARACTERS as c (c)}
+									<option value={c}>{c}</option>
+								{/each}
 							</Select>
 						{/snippet}
 					</Control>
@@ -114,34 +113,19 @@
 						{#snippet children({ props })}
 							<Label>Fuse</Label>
 							<Select {...props} bind:value={$formData[side].team.fuse}>
-								{#each FUSE as f (f)}<option value={f}>{f}</option>{/each}
+								{#each FUSE as f (f)}
+									<option value={f}>{f}</option>
+								{/each}
 							</Select>
 						{/snippet}
 					</Control>
 					<FieldErrors />
 				</Field>
-
-				<!-- <Field {form} name={`${side}.team.charSwapBeforeRound`}>
-					<Control>
-						{#snippet children({ props })}
-							<input
-								{...props}
-								type="checkbox"
-								bind:checked={$formData[side].team.charSwapBeforeRound}
-							/>
-							<Label
-								>If there was a tag before round swap after the first round. (Only really matters if
-								using Juggernaut/Side Kick)</Label
-							>
-						{/snippet}
-					</Control>
-					<FieldErrors />
-				</Field> -->
 			</Fieldset>
 		</Fieldset>
 	{/each}
 
-	<button class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700"
-		>Submit</button
-	>
+	<button class="rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700">
+		{submitLabel}
+	</button>
 </form>

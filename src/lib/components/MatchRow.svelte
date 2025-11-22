@@ -3,16 +3,15 @@
 	import type { CombinedMatchInfo } from '$lib/server/match';
 	import MatchSideBlock from '$lib/components/MatchRowSide.svelte';
 	import Card from 'flowbite-svelte/Card.svelte';
+	import EditSolid from 'flowbite-svelte-icons/EditSolid.svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let props = $props<{ match: CombinedMatchInfo }>();
 	const match = props.match;
 
-	// function formatSpan(start?: number, end?: number | null) {
-	// 	if (start == null) return '';
-	// 	if (!end && end !== 0) return `@${start}s`;
-	// 	const dur = Math.max(0, (end ?? start) - start);
-	// 	return `@${start}s • ${dur}s`;
-	// }
+	const editHref = resolve(`/match/update/${match.id}`);
+
 	function videoJumpUrl(v: CombinedMatchInfo['video'], start: number) {
 		try {
 			const u = new URL(v.url);
@@ -25,25 +24,44 @@
 			return v.url;
 		}
 	}
+
 	function handleClick(e: MouseEvent) {
 		e.preventDefault();
 		window.open(videoJumpUrl(match.video, match.startSec), '_blank');
 	}
+
+	function handleEditClick(e: MouseEvent) {
+		// don't trigger the Card's click handler
+		e.stopPropagation();
+		e.preventDefault();
+		// eslint-disable-next-line @typescript-eslint/no-floating-promises
+		goto(editHref);
+	}
 </script>
 
-<!-- 	class="flex w-full flex-col gap-1 rounded-2xl border px-5 py-2 text-base shadow-sm focus:ring-2 focus:outline-none"
- -->
 <Card onclick={handleClick} horizontal size="xl" aria-label={`Open match ${match.title ?? ''}`}>
-	<!-- TOP ROW -->
-	<div class="flex h-32 w-full flex-row justify-items-center gap-3">
-		<div class="h-full flex-auto basis-5/10">
-			<MatchSideBlock side={match.leftSide} direction="left" />
-		</div>
+	<div class="relative flex w-full flex-col">
+		<!-- EDIT BUTTON TOP-RIGHT -->
+		<button
+			type="button"
+			class="absolute top-2 right-2 inline-flex items-center rounded-full p-1.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+			aria-label="Edit match"
+			onclick={handleEditClick}
+		>
+			<EditSolid class="h-4 w-4" />
+		</button>
 
-		<span class="shrink-0 self-center px-3 font-semibold">vs</span>
+		<!-- TOP ROW -->
+		<div class="flex h-32 w-full flex-row justify-items-center gap-3">
+			<div class="h-full flex-auto basis-5/10">
+				<MatchSideBlock side={match.leftSide} direction="left" />
+			</div>
 
-		<div class="h-full w-5/10 flex-auto basis-5/10">
-			<MatchSideBlock side={match.rightSide} direction="right" />
+			<span class="shrink-0 self-center px-3 font-semibold">vs</span>
+
+			<div class="h-full w-5/10 flex-auto basis-5/10">
+				<MatchSideBlock side={match.rightSide} direction="right" />
+			</div>
 		</div>
 	</div>
 </Card>
