@@ -5,6 +5,8 @@
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import CreateMatchModal from '$lib/components/CreateMatchModal.svelte';
 
+	import Footer from 'flowbite-svelte/Footer.svelte';
+
 	let { children } = $props();
 </script>
 
@@ -23,5 +25,9 @@
 		<ThemeToggle />
 	</header>
 
-	{@render children?.()}
+	<div>
+		{@render children?.()}
+	</div>
+
+	<Footer class="fixed bottom-0 w-full">hi</Footer>
 </div>
