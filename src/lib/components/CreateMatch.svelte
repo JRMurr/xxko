@@ -39,7 +39,9 @@
 
 <form use:enhance class="mx-auto flex max-w-3xl flex-col gap-6" method="POST" action="/match/new">
 	{#if $message}
-		<div class="message">{$message}</div>
+		<div class="rounded border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
+			{$message}
+		</div>
 	{/if}
 
 	<Field {form} name="video">
