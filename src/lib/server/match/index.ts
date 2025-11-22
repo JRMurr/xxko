@@ -21,7 +21,7 @@ import {
 	type ColumnDataType
 } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
-// import { queryDebug } from '$test/utils';
+import { queryDebug } from '$test/utils';
 
 export const createMatch = (db: xxDatabase, matchInfo: z.infer<typeof matchSchema>) =>
 	db.transaction(
@@ -252,12 +252,12 @@ type GetMatchRes = {
 };
 
 export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<GetMatchRes> => {
-	const filterIf = <T, FilterFn extends (x: T) => SQL<undefined>>(
+	const filterIf = <T, FilterFn extends (x: T) => SQL<unknown>>(
 		cond: T | undefined,
-		filter: SQL<undefined> | FilterFn
+		filter: SQL<unknown> | FilterFn
 	) => {
 		if (!cond) {
-			return undefined;
+			return sql`true`;
 		}
 
 		if (typeof filter === 'function') {
@@ -267,24 +267,16 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 		return filter;
 	};
 
-	const sideFilters = [
-		filterIf(
-			filter.player && filter.player.length,
-			sql`${like(player.name, `%${filter.player}%`)}`
-		),
-		filterIf(filter.fuse.length, () => sql`${inArray(team.fuse, filter.fuse)}`),
-		filterIf(
-			filter.character.length,
-			() =>
-				sql`(${inArray(team.pointChar, filter.character)} or ${inArray(team.assistChar, filter.character)})`
-		)
-	].filter((maybeFilter) => !!maybeFilter);
-
-	const sideFilterStr = sideFilters.length ? sql.join(sideFilters, sql` and `) : sql`true`;
-
 	// not selected on in final query but filtered on later
 	const sideComputed = {
-		side_filter: sql<number>`max(${sideFilterStr})`.as(`side_filter`)
+		player_filter: filterIf(
+			filter.player && filter.player.length,
+			sql`${like(player.name, `%${filter.player}%`)}`
+		).as('player_filter'),
+
+		fuse_filter: filterIf(filter.fuse.length, () => sql`${inArray(team.fuse, filter.fuse)}`).as(
+			'fuse_filter'
+		)
 	};
 
 	const sideSubquery = db
@@ -324,6 +316,30 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 		sql`, `
 	);
 
+	const checkSideFilter = (filter: keyof typeof sideComputed) => {
+		return sql`(${getSideField('left', filter)} = true or ${getSideField('right', filter)} = true)`;
+	};
+
+	const filterChecks = sql.join(
+		(Object.keys(sideComputed) as (keyof typeof sideComputed)[]).map((k) => checkSideFilter(k)),
+		sql` and `
+	);
+
+	const characterFilter = filterIf(filter.character.length, () => {
+		const left_point = getSideField('left', 'point_char');
+		const left_assist = getSideField('left', 'assist_char');
+
+		const right_point = getSideField('right', 'point_char');
+		const right_assist = getSideField('right', 'assist_char');
+
+		return sql.join(
+			filter.character.map(
+				(c) => sql`${c} in (${left_point}, ${left_assist}, ${right_point}, ${right_assist})`
+			),
+			sql` and `
+		);
+	});
+
 	const base_query = sql`
 		WITH 
 			sideInfo as ${sideSubquery},
@@ -335,8 +351,10 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 		from matchVideo
 		left join sideInfo as leftSideInfo on leftSideInfo.id = matchVideo.match_left_side_id
 		left join sideInfo as rightSideInfo on rightSideInfo.id = matchVideo.match_right_side_id
-		WHERE ${getSideField('left', 'side_filter')} = true or ${getSideField('right', 'side_filter')} = true
+		WHERE ${filterChecks} and ${characterFilter}
 	`;
+
+	console.log('q', queryDebug(base_query).sql, '\np', queryDebug(base_query).params);
 
 	const get_count = async () => {
 		const count_query = sql`SELECT count(1) as count from (${base_query})`;

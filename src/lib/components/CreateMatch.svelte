@@ -116,10 +116,9 @@
 					<FieldErrors />
 				</Field>
 
-				<Field {form} name={`${side}.team.charSwapBeforeRound`}>
+				<!-- <Field {form} name={`${side}.team.charSwapBeforeRound`}>
 					<Control>
 						{#snippet children({ props })}
-							<!-- TODO: checkbox -->
 							<input
 								{...props}
 								type="checkbox"
@@ -132,7 +131,7 @@
 						{/snippet}
 					</Control>
 					<FieldErrors />
-				</Field>
+				</Field> -->
 			</Fieldset>
 		</Fieldset>
 	{/each}
