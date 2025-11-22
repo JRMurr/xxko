@@ -42,14 +42,14 @@
 			<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
 		{/if} -->
 	</div>
-	<div class="flex flex-row gap-2">
+	<div class={['flex flex-row gap-2', direction === 'right' ? 'flex-row-reverse' : 'flex-row']}>
+		<span class="text-muted-foreground flex w-full truncate text-sm" title={playersInline(side)}>
+			{playersInline(side)}
+		</span>
 		<span
 			class="inline-flex items-center justify-center rounded border px-1.5 py-0.5 text-sm leading-none"
 		>
 			{side.team.fuse}
-		</span>
-		<span class="text-muted-foreground flex w-full truncate text-sm" title={playersInline(side)}>
-			{playersInline(side)}
 		</span>
 	</div>
 </div>
