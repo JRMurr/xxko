@@ -16,7 +16,7 @@
 			return s.sidePlayers[0].player.name;
 		}
 
-		return s.sidePlayers.map((sp) => `${sp.player.name} (${sp.role})`).join(', ');
+		return s.sidePlayers.map((sp) => sp.player.name).join('/');
 	}
 
 	const chars = [side.team.assistChar, side.team.pointChar];
@@ -42,12 +42,20 @@
 			<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
 		{/if} -->
 	</div>
-	<div class={['flex flex-row gap-2', direction === 'right' ? 'flex-row-reverse' : 'flex-row']}>
-		<span class="text-muted-foreground flex w-full truncate text-sm" title={playersInline(side)}>
+	<div
+		class={[
+			'flex h-full w-full place-content-center items-center justify-center gap-2 pb-1.5',
+			direction === 'right' ? 'flex-row-reverse' : 'flex-row'
+		]}
+	>
+		<span
+			class="text-muted-foreground flex h-full truncate text-center align-middle text-sm"
+			title={playersInline(side)}
+		>
 			{playersInline(side)}
 		</span>
 		<span
-			class="inline-flex items-center justify-center rounded border px-1.5 py-0.5 text-sm leading-none"
+			class="flex h-full items-center justify-center rounded border px-1.5 py-0.5 text-sm leading-none"
 		>
 			{side.team.fuse}
 		</span>
