@@ -32,126 +32,241 @@ export class DuplicateMatchError extends Error {
 	}
 }
 
+type TxClient = Pick<xxDatabase, 'select' | 'insert' | 'update' | 'delete'>;
+
+type MatchSideInput = z.infer<typeof matchSideSchema>;
+
+const resolveVideoForMatch = async (tx: TxClient, video: string) => {
+	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	const youtubeInfo = extractYouTubeInfo(video)!;
+
+	const videoInfo = {
+		url: video,
+		externalId: youtubeInfo.id
+	};
+
+	const maybeVideo = await tx
+		.select({ id: videoSource.id })
+		.from(videoSource)
+		.where(eq(videoSource.externalId, videoInfo.externalId))
+		.limit(1); // TODO: and platform when supporting twitch
+
+	let videoId: number;
+	if (maybeVideo.length === 1) {
+		videoId = maybeVideo[0].id;
+	} else {
+		const res = await tx
+			.insert(videoSource)
+			.values({ ...videoInfo, platform: 'youtube' })
+			.onConflictDoNothing()
+			.returning({ videoId: videoSource.id });
+		videoId = res[0].videoId;
+	}
+
+	const startSec = youtubeInfo.start ?? 0;
+
+	return { videoId, startSec, videoInfo };
+};
+
+const findOrCreateTeam = async (tx: TxClient, info: MatchSideInput['team']): Promise<number> => {
+	const maybeTeam = await tx
+		.select({ id: team.id })
+		.from(team)
+		.where(
+			and(
+				eq(team.pointChar, info.pointChar),
+				eq(team.assistChar, info.assistChar),
+				eq(team.fuse, info.fuse),
+				eq(team.charSwapBeforeRound, !!info.charSwapBeforeRound)
+			)
+		)
+		.limit(1);
+
+	if (maybeTeam.length === 1) {
+		return maybeTeam[0].id;
+	}
+
+	const res = await tx
+		.insert(team)
+		.values(info)
+		.onConflictDoNothing()
+		.returning({ teamId: team.id });
+
+	return res[0].teamId;
+};
+
+const findOrCreatePlayer = async (tx: TxClient, name: string): Promise<number> => {
+	const maybePlayer = await tx.select().from(player).where(eq(player.name, name)).limit(1);
+
+	if (maybePlayer.length === 1) {
+		return maybePlayer[0].id;
+	}
+
+	const res = await tx.insert(player).values({ name }).returning({ playerId: player.id });
+	return res[0].playerId;
+};
+
+/**
+ * Insert or update a matchSide + its players.
+ *
+ * - If existingSideId is undefined: INSERT matchSide and players (createMatch case)
+ * - If existingSideId is provided: UPDATE matchSide.teamId and replace players (updateMatch case)
+ *
+ * Only matchSide is updated; player/video tables are never updated, only found/created.
+ */
+const upsertMatchSide = async (
+	tx: TxClient,
+	info: MatchSideInput,
+	existingSideId?: number
+): Promise<number> => {
+	const teamId = await findOrCreateTeam(tx, info.team);
+
+	let sideId = existingSideId;
+
+	if (!sideId) {
+		const [{ sideId: insertedSideId }] = await tx
+			.insert(matchSide)
+			.values({ teamId })
+			.returning({ sideId: matchSide.id });
+		sideId = insertedSideId;
+	} else {
+		// Only update the MatchSide table
+		await tx.update(matchSide).set({ teamId }).where(eq(matchSide.id, sideId));
+
+		// Replace players for this side
+		await tx.delete(matchSidePlayer).where(eq(matchSidePlayer.sideId, sideId));
+	}
+
+	const addPlayer = async (name: string, role: PlayerRole) => {
+		const playerId = await findOrCreatePlayer(tx, name);
+		await tx.insert(matchSidePlayer).values({ sideId: sideId, playerId, role });
+	};
+
+	await addPlayer(info.pointPlayerName, 'point');
+
+	if (info.assistPlayerName) {
+		await addPlayer(info.assistPlayerName, 'assist');
+	}
+
+	return sideId;
+};
+
+const withUniqueMatchConstraintHandling = async <T>(
+	op: () => Promise<T>,
+	videoExternalId: string,
+	startSec: number
+): Promise<T> => {
+	try {
+		return await op();
+	} catch (err: unknown) {
+		if (!(err instanceof DrizzleQueryError)) {
+			throw err;
+		}
+
+		const cause = err.cause;
+		if (!(cause instanceof LibsqlError)) {
+			throw err;
+		}
+		if (cause.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+			throw new DuplicateMatchError(videoExternalId, startSec);
+		}
+
+		throw err;
+	}
+};
+
+/* -------------------------------------------------------------------------- */
+/*                               createMatch                                  */
+/* -------------------------------------------------------------------------- */
+
 export const createMatch = (db: xxDatabase, matchInfo: z.infer<typeof matchSchema>) =>
 	db.transaction(
 		async (tx) => {
 			// TODO: call out to youtube api to do some level of validation that the link is probably 2xko?
 			// TODO: twitch support
 
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const youtubeInfo = extractYouTubeInfo(matchInfo.video)!;
+			const { videoId, startSec, videoInfo } = await resolveVideoForMatch(tx, matchInfo.video);
 
-			const videoInfo = {
-				url: matchInfo.video,
-				externalId: youtubeInfo.id
-			};
+			const leftSideId = await upsertMatchSide(tx, matchInfo.left);
+			const rightSideId = await upsertMatchSide(tx, matchInfo.right);
 
-			let videoId: number;
+			const matchId = await withUniqueMatchConstraintHandling(
+				async () => {
+					const [{ matchId }] = await tx
+						.insert(match)
+						.values({
+							leftSideId,
+							rightSideId,
+							videoId,
+							startSec
+						})
+						.returning({ matchId: match.id });
+					return matchId;
+				},
+				videoInfo.externalId,
+				startSec
+			);
 
-			const maybeVideo = await tx
-				.select({ id: videoSource.id })
-				.from(videoSource)
-				.where(eq(videoSource.externalId, videoInfo.externalId))
-				.limit(1); // TODO: and platform when supporting twitch
+			return matchId;
+		},
+		{ behavior: 'immediate' }
+	);
 
-			if (maybeVideo.length === 1) {
-				videoId = maybeVideo[0].id;
-			} else {
-				const res = await tx
-					.insert(videoSource)
-					.values({ ...videoInfo, platform: 'youtube' })
-					.onConflictDoNothing()
-					.returning({ videoId: videoSource.id });
-				videoId = res[0].videoId;
+/* -------------------------------------------------------------------------- */
+/*                               updateMatch                                  */
+/* -------------------------------------------------------------------------- */
+
+export const updateMatch = (
+	db: xxDatabase,
+	matchId: number,
+	matchInfo: z.infer<typeof matchSchema>
+) =>
+	db.transaction(
+		async (tx) => {
+			// Fetch existing match so we know the side ids
+			const existing = await tx
+				.select({
+					id: match.id,
+					videoId: match.videoId,
+					leftSideId: match.leftSideId,
+					rightSideId: match.rightSideId
+				})
+				.from(match)
+				.where(eq(match.id, matchId))
+				.limit(1);
+
+			if (existing.length === 0) {
+				throw new Error(`Match with id ${matchId} not found`);
 			}
 
-			const handleSide = async (info: z.infer<typeof matchSideSchema>) => {
-				let teamId: number;
+			const { leftSideId, rightSideId } = existing[0];
 
-				const maybeTeam = await tx
-					.select({ id: team.id })
-					.from(team)
-					.where(
-						and(
-							eq(team.pointChar, info.team.pointChar),
-							eq(team.assistChar, info.team.assistChar),
-							eq(team.fuse, info.team.fuse),
-							eq(team.charSwapBeforeRound, !!info.team.charSwapBeforeRound)
-						)
-					)
-					.limit(1);
+			const { videoId, startSec, videoInfo } = await resolveVideoForMatch(tx, matchInfo.video);
 
-				if (maybeTeam.length === 1) {
-					teamId = maybeTeam[0].id;
-				} else {
-					const res = await tx
-						.insert(team)
-						.values(info.team)
-						.onConflictDoNothing()
-						.returning({ teamId: team.id });
-					teamId = res[0].teamId;
-				}
+			// Update both sides (but only actually UPDATE MatchSide)
+			await upsertMatchSide(tx, matchInfo.left, leftSideId);
+			await upsertMatchSide(tx, matchInfo.right, rightSideId);
 
-				const [{ sideId }] = await tx
-					.insert(matchSide)
-					.values({
-						teamId
-					})
-					.returning({ sideId: matchSide.id });
+			await withUniqueMatchConstraintHandling(
+				async () => {
+					// Only UPDATE the Match table
+					await tx
+						.update(match)
+						.set({
+							videoId,
+							startSec
+							// Thread more fields from matchInfo here if/when you persist them:
+							// title, context, notes, patch, etc.
+						})
+						.where(eq(match.id, matchId));
 
-				const handlePlayer = async (name: string, role: PlayerRole) => {
-					const maybePlayer = await tx.select().from(player).where(eq(player.name, name)).limit(1);
+					return matchId;
+				},
+				videoInfo.externalId,
+				startSec
+			);
 
-					let playerId: number;
-					if (maybePlayer.length === 1) {
-						playerId = maybePlayer[0].id;
-					} else {
-						const res = await tx.insert(player).values({ name }).returning({ playerId: player.id });
-						playerId = res[0].playerId;
-					}
-
-					await tx.insert(matchSidePlayer).values({ sideId, playerId, role });
-				};
-
-				await handlePlayer(info.pointPlayerName, 'point');
-
-				if (info.assistPlayerName) {
-					await handlePlayer(info.assistPlayerName, 'assist');
-				}
-
-				return sideId;
-			};
-
-			const leftSideId = await handleSide(matchInfo.left);
-			const rightSideId = await handleSide(matchInfo.right);
-
-			const startSec = youtubeInfo.start ?? 0;
-			try {
-				const [{ matchId }] = await tx
-					.insert(match)
-					.values({
-						leftSideId,
-						rightSideId,
-						videoId,
-						startSec
-					})
-					.returning({ matchId: match.id });
-				return matchId;
-			} catch (err: unknown) {
-				if (!(err instanceof DrizzleQueryError)) {
-					throw err;
-				}
-
-				const cause = err.cause;
-				if (!(cause instanceof LibsqlError)) {
-					throw err;
-				}
-				if (cause.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-					throw new DuplicateMatchError(videoInfo.externalId, startSec);
-				}
-
-				throw err;
-			}
+			return matchId;
 		},
 		{ behavior: 'immediate' }
 	);
