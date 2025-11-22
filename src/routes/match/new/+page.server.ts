@@ -1,5 +1,5 @@
 import { createMatch, DuplicateMatchError } from '$lib/server/match';
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
@@ -27,13 +27,16 @@ export const actions = {
 			// Option 2: keep user on page and show a success flash (AJAX-friendly)
 			return message(form, 'Created!');
 		} catch (e: unknown) {
+			if (e instanceof DuplicateMatchError) {
+				return error(400, { message: e.message });
+			}
 			// Attach a top-level error message
 			let msgText = 'something went wrong';
 			if (e instanceof Error) {
 				msgText = e.message;
 			}
 
-			const status = e instanceof DuplicateMatchError ? 400 : 500;
+			const status = 500;
 
 			return message(form, msgText, { status });
 		}
