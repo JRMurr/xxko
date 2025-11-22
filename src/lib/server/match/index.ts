@@ -21,7 +21,6 @@ import {
 	type ColumnDataType
 } from 'drizzle-orm';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
-import { queryDebug } from '$test/utils';
 
 export const createMatch = (db: xxDatabase, matchInfo: z.infer<typeof matchSchema>) =>
 	db.transaction(
@@ -353,8 +352,6 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 		left join sideInfo as rightSideInfo on rightSideInfo.id = matchVideo.match_right_side_id
 		WHERE ${filterChecks} and ${characterFilter}
 	`;
-
-	console.log('q', queryDebug(base_query).sql, '\np', queryDebug(base_query).params);
 
 	const get_count = async () => {
 		const count_query = sql`SELECT count(1) as count from (${base_query})`;

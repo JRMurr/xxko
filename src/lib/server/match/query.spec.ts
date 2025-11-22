@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, assert } from 'vitest';
 import { zocker } from 'zocker';
 import { matchFilterSchema, matchSchema, type Match, type MatchFilter } from '$lib/schemas';
 
@@ -102,6 +102,37 @@ describe('query matches', () => {
 			expect(res.rows.length).toBeGreaterThan(0);
 			expect(res.rows.length).toBeLessThan(numGenerated);
 			expect(res.totalCount).toBeLessThan(numGenerated);
+		});
+	});
+
+	describe('character filtering', () => {
+		it('ensures each result contains all characters from the filter', async () => {
+			const matchWithFilterChars = createdMatches[0];
+			const filterCharacters = [
+				matchWithFilterChars.left.team.pointChar,
+				matchWithFilterChars.right.team.assistChar
+			];
+
+			const res = await getMatches(
+				ctx.db,
+				matchFilterSchema.parse({
+					character: filterCharacters,
+					limit: numGenerated + 10
+				})
+			);
+
+			expect(res.rows.length).toBeGreaterThan(0);
+
+			for (const row of res.rows) {
+				const matchCharacters = [
+					row.leftSide.team.pointChar,
+					row.leftSide.team.assistChar,
+					row.rightSide.team.pointChar,
+					row.rightSide.team.assistChar
+				];
+
+				assert.includeMembers(matchCharacters, filterCharacters);
+			}
 		});
 	});
 });
