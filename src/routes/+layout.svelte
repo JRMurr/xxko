@@ -18,6 +18,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<title>2XKO match videos</title>
 </svelte:head>
 
 <div class="flex min-h-dvh flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-neutral-100">
