@@ -20,23 +20,20 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<!-- {@render children?.()} -->
-
-<div class="min-h-dvh bg-white text-gray-900 dark:bg-gray-900 dark:text-neutral-100">
-	<!-- class="flex items-center justify-between gap-4 border-b border-neutral-200 p-4 dark:border-gray-800" -->
+<div class="flex min-h-dvh flex-col bg-white text-gray-900 dark:bg-gray-900 dark:text-neutral-100">
 	<Navbar class="sticky start-0 top-0 z-20 w-full bg-white px-2 py-2.5 sm:px-4 dark:bg-gray-800">
-		<CreateMatchModal></CreateMatchModal>
-
+		<CreateMatchModal />
 		<ThemeToggle />
 	</Navbar>
 
-	<div>
+	<!-- main content grows to fill space, pushing footer to bottom if there’s extra height -->
+	<main class="flex-1">
 		{@render children?.()}
-	</div>
+	</main>
 
 	<Footer
 		footerType="socialmedia"
-		class="fixed start-0 bottom-0 w-full bg-white px-2 py-2.5 sm:px-4 dark:bg-gray-800"
+		class="mt-auto w-full bg-white px-2 py-2.5 pt-4 sm:px-4 dark:bg-gray-800"
 	>
 		<div class="mt-4 flex space-x-6 sm:mt-0 sm:justify-center rtl:space-x-reverse">
 			<FooterIcon href="https://x.com/JRMurrCodes">
