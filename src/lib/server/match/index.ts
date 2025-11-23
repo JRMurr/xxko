@@ -24,6 +24,8 @@ import {
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { LibsqlError } from '@libsql/client';
 
+// import { queryDebug } from '$test/utils';
+
 export class DuplicateMatchError extends Error {
 	constructor(id: string, start_time: number) {
 		super(`Match with video_id (${id}) and start time (${start_time}). Already exists`);
@@ -425,7 +427,7 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 		.innerJoin(team, eq(team.id, matchSide.teamId))
 		.innerJoin(matchSidePlayer, eq(matchSidePlayer.sideId, matchSide.id))
 		.innerJoin(player, eq(matchSidePlayer.playerId, player.id))
-		.groupBy(team.pointChar, team.assistChar, team.fuse, team.charSwapBeforeRound);
+		.groupBy(matchSide.id, team.pointChar, team.assistChar, team.fuse, team.charSwapBeforeRound);
 
 	const matchVideo = db
 		.select({ ...matchSelects, ...videoSelects })
@@ -512,6 +514,8 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 			LIMIT ${limit}
 			OFFSET ${offset}
 		`;
+
+		// console.log(queryDebug(row_query).sql);
 
 		const rows: RawGetRow[] = await db.all(row_query);
 
