@@ -14,37 +14,18 @@
 let
   fs = lib.fileset;
 
-  baseSrc = fs.gitTracked ../.;
+  projectRoot = ../site;
 
-  nixFiles = fs.fileFilter (file: lib.hasSuffix ".nix" file.name) ../.;
-
-  ignoreFiles = fs.unions [
-    (fs.maybeMissing ../.env)
-    ../.vscode
-    ../.env.example
-    ../.envrc
-    ../.prettierignore
-    ../.prettierrc
-    ../flake.lock
-    ../nix
-    ../tests
-    ../slumber.yml
-    ../README.md
-    ../justfile
-    ../fly.toml
-    nixFiles
-  ];
-
-  filtered = fs.difference baseSrc ignoreFiles;
+  baseSrc = fs.gitTracked projectRoot;
 
   src = fs.toSource {
-    root = ../.;
-    fileset = filtered;
+    root = projectRoot;
+    fileset = baseSrc;
   };
 
   npmDeps = importNpmLock {
-    package = lib.importJSON ../package.json;
-    packageLock = lib.importJSON ../package-lock.json;
+    package = lib.importJSON ../site/package.json;
+    packageLock = lib.importJSON ../site/package-lock.json;
   };
 
   dataDir = "/data";
@@ -53,10 +34,10 @@ let
   node_modules_only_build = buildNpmPackage ({
     inherit nodejs;
     src = fs.toSource {
-      root = ../.;
+      root = projectRoot;
       fileset = fs.unions [
-        ../package.json
-        ../package-lock.json
+        ../site/package.json
+        ../site/package-lock.json
       ];
     };
     pname = "xxko";

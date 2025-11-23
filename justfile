@@ -2,19 +2,19 @@ default:
   just --list
 
 dev:
-  npm rum db:migrate && npm run dev -- --open
+  npm --prefix site run db:migrate && npm --prefix site run dev -- --open
 
 format:
-  npm run format
+  npm --prefix site run format
 
 check:
-  npm run check
+  npm --prefix site run check
 
 lint: 
-  npm run lint
+  npm --prefix site run lint
 
 test:
-  npm run test:unit -- --run
+  npm --prefix site run test:unit -- --run
 
 ci: check lint test
 

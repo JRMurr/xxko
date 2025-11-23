@@ -1,10 +1,19 @@
 # xxko
 
+## Structure
+
+- `site/` – SvelteKit web application
+- repo root – shared infra (nix, Fly, etc.) for multiple services
+
 ## Dev
 
 ```shell
-just dev # run dev webserver for site
+cd site
+npm install
+npm run dev -- --open
 ```
+
+or use `just dev` from the repo root, which runs the same commands inside `site/`.
 
 ## Assets
 
