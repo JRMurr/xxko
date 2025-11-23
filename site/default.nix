@@ -14,7 +14,7 @@
 let
   fs = lib.fileset;
 
-  projectRoot = ../site;
+  projectRoot = ./.;
 
   baseSrc = fs.gitTracked projectRoot;
 
@@ -24,8 +24,8 @@ let
   };
 
   npmDeps = importNpmLock {
-    package = lib.importJSON ../site/package.json;
-    packageLock = lib.importJSON ../site/package-lock.json;
+    package = lib.importJSON ./package.json;
+    packageLock = lib.importJSON ./package-lock.json;
   };
 
   dataDir = "/data";
@@ -36,8 +36,8 @@ let
     src = fs.toSource {
       root = projectRoot;
       fileset = fs.unions [
-        ../site/package.json
-        ../site/package-lock.json
+        ./package.json
+        ./package-lock.json
       ];
     };
     pname = "xxko";

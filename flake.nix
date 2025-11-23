@@ -21,7 +21,7 @@
 
         nix2containerPkgs = nix2container.packages.x86_64-linux;
 
-        myBuilds = pkgs.callPackage ./nix { nix2container = nix2containerPkgs.nix2container; };
+        site = pkgs.callPackage ./site { nix2container = nix2containerPkgs.nix2container; };
       in
       {
         devShells = {
@@ -37,11 +37,11 @@
         };
 
         packages = {
-          site = myBuilds.site.run_site;
-          docker = myBuilds.site.docker; # https://sekun.net/blog/deploying-nix-builds-on-fly-io/
+          site = site.run_site;
+          docker = site.docker; # https://sekun.net/blog/deploying-nix-builds-on-fly-io/
 
           # debugging mostly
-          site_node_modules = myBuilds.site.node_modules_only_build;
+          site_node_modules = site.node_modules_only_build;
         };
       }
     );
