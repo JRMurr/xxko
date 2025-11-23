@@ -1,0 +1,19 @@
+# default:
+#   just --list
+
+dev:
+  npm run db:migrate && npm run dev -- --open
+
+format:
+  npm run format
+
+check:
+  npm run check
+
+lint:
+  npm run lint
+
+test:
+  npm run test:unit -- --run
+
+ci: check lint test

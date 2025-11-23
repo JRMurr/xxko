@@ -1,20 +1,21 @@
 default:
   just --list
 
+
 dev:
-  npm --prefix site run db:migrate && npm --prefix site run dev -- --open
+  just site/dev
 
 format:
-  npm --prefix site run format
+  just site/format
 
 check:
-  npm --prefix site run check
+  just site/check
 
 lint: 
-  npm --prefix site run lint
+  just site/lint
 
 test:
-  npm --prefix site run test:unit -- --run
+  just site/test
 
 ci: check lint test
 
