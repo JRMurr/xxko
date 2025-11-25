@@ -371,6 +371,7 @@ const playerSchema = z
 type GetMatchRes = {
 	rows: CombinedMatchInfo[];
 	totalCount: number;
+	offset: number;
 };
 
 export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<GetMatchRes> => {
@@ -475,11 +476,11 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 		return res.count;
 	};
 
-	const get_rows = async () => {
-		const limit = filter.limit ?? 10;
-		const page = filter.page ?? 1;
-		const offset = (page - 1) * limit;
+	const limit = filter.limit ?? 10;
+	const page = filter.page ?? 1;
+	const offset = (page - 1) * limit;
 
+	const get_rows = async () => {
 		const row_query = sql`
 			SELECT * from (${base_query})
 			ORDER by match_created_at DESC
@@ -531,6 +532,7 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 
 	return {
 		rows,
-		totalCount
+		totalCount,
+		offset
 	};
 };

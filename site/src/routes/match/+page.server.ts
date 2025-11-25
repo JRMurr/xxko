@@ -6,9 +6,13 @@ import type { PageServerLoad } from './$types';
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const vals = matchFilterSchema.parse(searchParamsToValues(url.searchParams));
 
-	const limit = 10;
+	const limit = 8;
 
-	const { rows: matches, totalCount: totalMatches } = await getMatches(locals.db, {
+	const {
+		rows: matches,
+		totalCount: totalMatches,
+		offset
+	} = await getMatches(locals.db, {
 		...vals,
 		limit
 	});
@@ -18,6 +22,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	return {
 		matches,
 		totalMatches,
-		totalPages
+		totalPages,
+		offset,
+		limit
 	};
 };
