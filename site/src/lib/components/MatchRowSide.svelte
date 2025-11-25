@@ -30,13 +30,15 @@
 		]}
 	>
 		{#each chars as c (c)}
-			<img
-				src={charSrc(c)}
-				alt={c}
-				title={c}
-				class="flex h-[80%] w-auto basis-1/4 rounded-lg object-contain"
-				loading="lazy"
-			/>
+			<div class="flex h-[80%] w-auto basis-1/4 rounded-lg object-contain">
+				<enhanced:img
+					src={charSrc(c)}
+					alt={c}
+					title={c}
+					loading="lazy"
+					sizes="min(1280px, 100vw)"
+				/>
+			</div>
 		{/each}
 		<!-- {#if side.team.charSwapBeforeRound}
 			<span class="text-[10px] opacity-70" title="Swapped before round">↔︎</span>
