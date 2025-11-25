@@ -31,13 +31,7 @@
 	>
 		{#each chars as c (c)}
 			<div class="flex h-[80%] w-auto basis-1/4 rounded-lg object-contain">
-				<enhanced:img
-					src={charSrc(c)}
-					alt={c}
-					title={c}
-					loading="lazy"
-					sizes="min(1280px, 100vw)"
-				/>
+				<enhanced:img src={charSrc(c)} alt={c} title={c} loading="lazy" />
 			</div>
 		{/each}
 		<!-- {#if side.team.charSwapBeforeRound}
