@@ -41,11 +41,11 @@
 	}
 </script>
 
-<Card onclick={handleClick} horizontal size="xl" aria-label={`Open match ${match.title ?? ''}`}>
+<Card onclick={handleClick} horizontal size="lg" aria-label={`Open match ${match.title ?? ''}`}>
 	<div class="relative flex w-full flex-col">
 		<button
 			type="button"
-			class="absolute top-2 right-2 inline-flex items-center rounded-full p-1.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+			class="absolute right-2 top-2 inline-flex items-center rounded-full p-1.5 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
 			aria-label="Edit match"
 			onclick={handleEditClick}
 		>
@@ -53,13 +53,13 @@
 		</button>
 
 		<div class="flex h-32 w-full flex-row justify-items-center gap-3">
-			<div class="h-full flex-auto basis-5/10">
+			<div class="basis-5/10 h-full flex-auto">
 				<MatchSideBlock side={match.leftSide} direction="left" />
 			</div>
 
 			<span class="shrink-0 self-center px-3 font-semibold">vs</span>
 
-			<div class="h-full w-5/10 flex-auto basis-5/10">
+			<div class="w-5/10 basis-5/10 h-full flex-auto">
 				<MatchSideBlock side={match.rightSide} direction="right" />
 			</div>
 		</div>
