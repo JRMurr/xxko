@@ -52,10 +52,7 @@ export async function validateSessionToken(db: xxDatabase, token: string) {
 	const renewSession = Date.now() >= session.expiresAt.getTime() - DAY_IN_MS * 15;
 	if (renewSession) {
 		session.expiresAt = new Date(Date.now() + DAY_IN_MS * 30);
-		await db
-			.update(table.session)
-			.set({ expiresAt: session.expiresAt })
-			.where(eq(table.session.id, session.id));
+		await db.update(table.session).set({ expiresAt: session.expiresAt }).where(eq(table.session.id, session.id));
 	}
 
 	return { session, user };

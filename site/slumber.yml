@@ -32,16 +32,8 @@ requests:
       data:
         {
           video: 'https://youtu.be/hsP7lO_yz7Q?si=-1b9i5V1j6esbpZh',
-          left:
-            {
-              pointPlayerName: 'Lak',
-              team: { pointChar: 'Darius', assistChar: 'Blitzcrank', fuse: '2xAssist' }
-            },
-          right:
-            {
-              pointPlayerName: 'lynx',
-              team: { pointChar: 'Ahri', assistChar: 'Darius', fuse: 'DoubleDown' }
-            }
+          left: { pointPlayerName: 'Lak', team: { pointChar: 'Darius', assistChar: 'Blitzcrank', fuse: '2xAssist' } },
+          right: { pointPlayerName: 'lynx', team: { pointChar: 'Ahri', assistChar: 'Darius', fuse: 'DoubleDown' } }
         }
 
   # example_get:

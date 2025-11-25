@@ -76,9 +76,7 @@ describe('create/update', () => {
 		]);
 
 		// should fail to create again
-		await expect(createMatch(ctx.db, matchInfo)).rejects.toThrow(
-			new DuplicateMatchError(created.video.externalId, 0)
-		);
+		await expect(createMatch(ctx.db, matchInfo)).rejects.toThrow(new DuplicateMatchError(created.video.externalId, 0));
 	});
 });
 

@@ -86,13 +86,7 @@
 
 	let lastPageNum = pageNum;
 
-	const onChange = ({
-		debounce,
-		resetPage = false
-	}: {
-		debounce: boolean;
-		resetPage?: boolean;
-	}) => {
+	const onChange = ({ debounce, resetPage = false }: { debounce: boolean; resetPage?: boolean }) => {
 		if (resetPage && pageNum !== 1) {
 			pageNum = 1;
 		}

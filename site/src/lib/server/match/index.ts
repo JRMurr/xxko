@@ -1,11 +1,4 @@
-import {
-	match,
-	videoSource,
-	team,
-	matchSide,
-	matchSidePlayer,
-	player
-} from '$lib/server/db/schema';
+import { match, videoSource, team, matchSide, matchSidePlayer, player } from '$lib/server/db/schema';
 import { type xxDatabase } from '$lib/server/db';
 import { extractYouTubeInfo, matchSchema, matchSideSchema, type MatchFilter } from '$lib/schemas';
 import { PLAYER_ROLE, type PlayerRole } from '$lib/constants';
@@ -88,11 +81,7 @@ const findOrCreateTeam = async (tx: TxClient, info: MatchSideInput['team']): Pro
 		return maybeTeam[0].id;
 	}
 
-	const res = await tx
-		.insert(team)
-		.values(info)
-		.onConflictDoNothing()
-		.returning({ teamId: team.id });
+	const res = await tx.insert(team).values(info).onConflictDoNothing().returning({ teamId: team.id });
 
 	return res[0].teamId;
 };
@@ -116,11 +105,7 @@ const findOrCreatePlayer = async (tx: TxClient, name: string): Promise<number> =
  *
  * Only matchSide is updated; player/video tables are never updated, only found/created.
  */
-const upsertMatchSide = async (
-	tx: TxClient,
-	info: MatchSideInput,
-	existingSideId?: number
-): Promise<number> => {
+const upsertMatchSide = async (tx: TxClient, info: MatchSideInput, existingSideId?: number): Promise<number> => {
 	const teamId = await findOrCreateTeam(tx, info.team);
 
 	let sideId = existingSideId;
@@ -218,11 +203,7 @@ export const createMatch = (db: xxDatabase, matchInfo: z.infer<typeof matchSchem
 /*                               updateMatch                                  */
 /* -------------------------------------------------------------------------- */
 
-export const updateMatch = (
-	db: xxDatabase,
-	matchId: number,
-	matchInfo: z.infer<typeof matchSchema>
-) =>
+export const updateMatch = (db: xxDatabase, matchId: number, matchInfo: z.infer<typeof matchSchema>) =>
 	db.transaction(
 		async (tx) => {
 			// Fetch existing match so we know the side ids
@@ -332,10 +313,9 @@ const sideSelects = {
 	fuse: typed_as(team.fuse, 'fuse'),
 	char_swap: typed_as(team.charSwapBeforeRound, 'char_swap'),
 
-	players:
-		sql<string>`json_group_array(json_object('name', ${player.name}, 'role', ${matchSidePlayer.role}))`.as(
-			'players'
-		)
+	players: sql<string>`json_group_array(json_object('name', ${player.name}, 'role', ${matchSidePlayer.role}))`.as(
+		'players'
+	)
 };
 
 type SideSelectsRaw = typeof sideSelects;
@@ -411,14 +391,11 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 
 	// not selected on in final query but filtered on later
 	const sideComputed = {
-		player_filter: filterIf(
-			filter.player && filter.player.length,
-			sql`${like(player.name, `%${filter.player}%`)}`
-		).as('player_filter'),
+		player_filter: filterIf(filter.player && filter.player.length, sql`${like(player.name, `%${filter.player}%`)}`).as(
+			'player_filter'
+		),
 
-		fuse_filter: filterIf(filter.fuse.length, () => sql`${inArray(team.fuse, filter.fuse)}`).as(
-			'fuse_filter'
-		)
+		fuse_filter: filterIf(filter.fuse.length, () => sql`${inArray(team.fuse, filter.fuse)}`).as('fuse_filter')
 	};
 
 	const sideSubquery = db
@@ -434,10 +411,7 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 		.from(match)
 		.innerJoin(videoSource, eq(videoSource.id, match.videoId));
 
-	const getSideField = (
-		side: 'left' | 'right',
-		field: keyof typeof sideSelects | keyof typeof sideComputed
-	) => {
+	const getSideField = (side: 'left' | 'right', field: keyof typeof sideSelects | keyof typeof sideComputed) => {
 		return sql.raw(`${side}SideInfo.${field}`);
 	};
 
@@ -475,9 +449,7 @@ export const getMatches = async (db: xxDatabase, filter: MatchFilter): Promise<G
 		const right_assist = getSideField('right', 'assist_char');
 
 		return sql.join(
-			filter.character.map(
-				(c) => sql`${c} in (${left_point}, ${left_assist}, ${right_point}, ${right_assist})`
-			),
+			filter.character.map((c) => sql`${c} in (${left_point}, ${left_assist}, ${right_point}, ${right_assist})`),
 			sql` and `
 		);
 	});

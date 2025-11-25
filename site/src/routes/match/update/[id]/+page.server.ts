@@ -1,9 +1,4 @@
-import {
-	getMatch,
-	DuplicateMatchError,
-	type CombinedMatchInfo,
-	updateMatch
-} from '$lib/server/match';
+import { getMatch, DuplicateMatchError, type CombinedMatchInfo, updateMatch } from '$lib/server/match';
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { superValidate, message } from 'sveltekit-superforms';

@@ -165,8 +165,7 @@ const getSchemas = (hackyDefaultEnums = false) => {
 	};
 };
 
-export const { teamSchema, matchSideSchema, videoSchema, matchSchema, matchUpdateSchema } =
-	getSchemas();
+export const { teamSchema, matchSideSchema, videoSchema, matchSchema, matchUpdateSchema } = getSchemas();
 
 export const { matchSchema: uiDefaultedMatchSchema } = getSchemas(true);
 

@@ -22,10 +22,7 @@
 	function apply(next: Mode) {
 		mode = next;
 		localStorage.setItem('theme', next);
-		const dark =
-			next === 'system'
-				? window.matchMedia('(prefers-color-scheme: dark)').matches
-				: next === 'dark';
+		const dark = next === 'system' ? window.matchMedia('(prefers-color-scheme: dark)').matches : next === 'dark';
 		document.documentElement.classList.toggle('dark', dark);
 	}
 
@@ -85,9 +82,7 @@
            hover:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
 	>
 		<span>{effectiveDark ? '🌙 Dark' : '☀️ Light'}{mode === 'system' ? ' (system)' : ''}</span>
-		<svg viewBox="0 0 20 20" class="h-4 w-4" aria-hidden="true"
-			><path d="M5 7l5 5 5-5" fill="currentColor" /></svg
-		>
+		<svg viewBox="0 0 20 20" class="h-4 w-4" aria-hidden="true"><path d="M5 7l5 5 5-5" fill="currentColor" /></svg>
 	</button>
 
 	{#if open}

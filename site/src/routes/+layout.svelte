@@ -32,20 +32,13 @@
 		{@render children?.()}
 	</main>
 
-	<Footer
-		footerType="socialmedia"
-		class="mt-auto w-full bg-white px-2 py-2.5 pt-4 sm:px-4 dark:bg-gray-800"
-	>
+	<Footer footerType="socialmedia" class="mt-auto w-full bg-white px-2 py-2.5 pt-4 sm:px-4 dark:bg-gray-800">
 		<div class="mt-4 flex space-x-6 sm:mt-0 sm:justify-center rtl:space-x-reverse">
 			<FooterIcon href="https://x.com/JRMurrCodes">
-				<TwitterSolid
-					class="h-5 w-5 text-gray-500 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
-				/>
+				<TwitterSolid class="h-5 w-5 text-gray-500 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white" />
 			</FooterIcon>
 			<FooterIcon href="https://github.com/JRMurr/xxko">
-				<GithubSolid
-					class="h-5 w-5 text-gray-500 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
-				/>
+				<GithubSolid class="h-5 w-5 text-gray-500 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white" />
 			</FooterIcon>
 		</div>
 	</Footer>

@@ -108,10 +108,7 @@ describe('query matches', () => {
 	describe('character filtering', () => {
 		it('ensures each result contains all characters from the filter', async () => {
 			const matchWithFilterChars = createdMatches[0];
-			const filterCharacters = [
-				matchWithFilterChars.left.team.pointChar,
-				matchWithFilterChars.right.team.assistChar
-			];
+			const filterCharacters = [matchWithFilterChars.left.team.pointChar, matchWithFilterChars.right.team.assistChar];
 
 			const res = await getMatches(
 				ctx.db,

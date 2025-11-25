@@ -55,11 +55,7 @@
 	<!-- Left / Right side-by-side on md+ -->
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 		{#each MATCH_SIDE as side (side)}
-			<Fieldset
-				{form}
-				name={side}
-				class="space-y-4 rounded-md border border-gray-200 p-4 dark:border-gray-700"
-			>
+			<Fieldset {form} name={side} class="space-y-4 rounded-md border border-gray-200 p-4 dark:border-gray-700">
 				<Legend class="text-base font-semibold">{sideLabel(side)}</Legend>
 
 				<Field {form} name={`${side}.pointPlayerName`}>

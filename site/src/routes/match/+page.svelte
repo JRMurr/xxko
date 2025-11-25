@@ -28,13 +28,7 @@
 				{/each}
 
 				<div class="flex justify-center">
-					<PaginationNav
-						table
-						size="large"
-						{currentPage}
-						{totalPages}
-						onPageChange={handlePageChange}
-					/>
+					<PaginationNav table size="large" {currentPage} {totalPages} onPageChange={handlePageChange} />
 				</div>
 			</div>
 		</main>
