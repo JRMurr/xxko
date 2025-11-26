@@ -30,6 +30,7 @@ const rightTeam = {
 } as const;
 
 const matchInfo = matchSchema.parse({
+	patch: '1.0.3',
 	video: url,
 	left: {
 		pointPlayerName: 'leftPad',
