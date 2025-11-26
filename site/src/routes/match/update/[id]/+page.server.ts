@@ -33,7 +33,8 @@ const combinedMatchToMatchInput = (m: CombinedMatchInfo): MatchInput => {
 	return {
 		video: m.video.url,
 		left: mapSideToMatchSideInput(m.leftSide),
-		right: mapSideToMatchSideInput(m.rightSide)
+		right: mapSideToMatchSideInput(m.rightSide),
+		patch: m.patch ?? ''
 	};
 };
 
