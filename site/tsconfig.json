@@ -11,8 +11,7 @@
 		"strict": true,
 		"exactOptionalPropertyTypes": true, // NOTE: arktype said so
 		"moduleResolution": "bundler"
-	},
-	"files": ["src/app.d.ts", "src/global-images.d.ts"]
+	}
 	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
 	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
 	//
