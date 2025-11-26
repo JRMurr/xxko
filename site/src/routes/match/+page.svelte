@@ -42,24 +42,21 @@
 							<span class="font-semibold text-gray-900 dark:text-white">{totalMatches}</span>
 							Matches
 						</div>
-						<!-- TODO: not sure why this gives a weird hydration error but i dont want to re-invent it.. -->
-						{#if browser}
-							<PaginationNav
-								layout="navigation"
-								size="large"
-								class="flex justify-center"
-								{currentPage}
-								{totalPages}
-								onPageChange={handlePageChange}
-							>
-								{#snippet prevContent()}
-									<ArrowLeftOutline class="h-5 w-5" />
-								{/snippet}
-								{#snippet nextContent()}
-									<ArrowRightOutline class="h-5 w-5" />
-								{/snippet}
-							</PaginationNav>
-						{/if}
+						<PaginationNav
+							layout="navigation"
+							size="large"
+							class="flex justify-center"
+							{currentPage}
+							{totalPages}
+							onPageChange={handlePageChange}
+						>
+							{#snippet prevContent()}
+								<ArrowLeftOutline class="h-5 w-5" />
+							{/snippet}
+							{#snippet nextContent()}
+								<ArrowRightOutline class="h-5 w-5" />
+							{/snippet}
+						</PaginationNav>
 					</div>
 				</div>
 			</div>
