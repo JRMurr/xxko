@@ -19,6 +19,7 @@
 	}
 
 	const chars = [side.team.assistChar, side.team.pointChar];
+	const CHAR_SIZES = '(max-width: 640px) 35vw, 192px';
 </script>
 
 <div class="flex h-full min-h-0 flex-col items-center gap-1">
@@ -29,13 +30,17 @@
 		]}
 	>
 		{#each chars as c (c)}
-			<img
-				src={charSrc(c)}
-				alt={c}
-				title={c}
-				class="flex h-full w-auto basis-1/4 rounded-lg object-contain"
-				loading="lazy"
-			/>
+			<div class="flex h-full w-auto basis-1/4 overflow-hidden rounded-lg">
+				<enhanced:img
+					src={charSrc(c)}
+					alt={c}
+					title={c}
+					class="h-full w-full object-contain"
+					loading="lazy"
+					decoding="async"
+					sizes={CHAR_SIZES}
+				/>
+			</div>
 		{/each}
 	</div>
 
