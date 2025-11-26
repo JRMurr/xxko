@@ -65,7 +65,7 @@
 		</div>
 
 		{#if match.patch}
-			<span class="absolute bottom-2 left-2 text-xs text-gray-500 dark:text-gray-400">{match.patch}</span>
+			<span class="absolute top-2 left-2 text-xs text-gray-500 dark:text-gray-400">{match.patch}</span>
 		{/if}
 	</div>
 </Card>
