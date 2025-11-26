@@ -3,7 +3,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { Field, Control, FieldErrors, Fieldset, Legend } from 'formsnap';
 	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { matchSchema } from '$lib/schemas';
+	import { uiDefaultedMatchSchema } from '$lib/schemas';
 	import { CHARACTERS, FUSE, MATCH_SIDE } from '$lib/constants';
 	import Input from 'flowbite-svelte/Input.svelte';
 	import Label from 'flowbite-svelte/Label.svelte';
@@ -15,14 +15,14 @@
 		action,
 		submitLabel
 	}: {
-		data: SuperValidated<Infer<typeof matchSchema>>;
+		data: SuperValidated<Infer<typeof uiDefaultedMatchSchema>>;
 		onResult?: FormOptions['onResult'];
 		action: string;
 		submitLabel: string;
 	} = $props();
 
 	const form = superForm(data, {
-		validators: zod4Client(matchSchema),
+		validators: zod4Client(uiDefaultedMatchSchema),
 		dataType: 'json',
 		onResult,
 		onError({ result }) {
@@ -31,6 +31,21 @@
 	});
 
 	const { form: formData, enhance, message } = form;
+
+	const knownPatches = ['1.0.3', '1.0.1.2'];
+
+	const showPatchSuggestions = (event: FocusEvent) => {
+		const input = event.currentTarget;
+		if (!(input instanceof HTMLInputElement) || input.value) return;
+
+		// Flowbite shows combobox options when Backspace clears the field; simulate that to open on focus.
+		input.dispatchEvent(
+			new KeyboardEvent('keydown', {
+				key: 'Backspace',
+				bubbles: true
+			})
+		);
+	};
 
 	const sideLabel = (s: (typeof MATCH_SIDE)[number]) => (s === 'left' ? 'Left Side' : 'Right Side');
 </script>
@@ -56,7 +71,13 @@
 		<Control>
 			{#snippet children({ props })}
 				<Label>Patch (optional)</Label>
-				<Input {...props} placeholder="X.X.X" bind:value={$formData.patch} />
+				<Input
+					{...props}
+					data={knownPatches}
+					placeholder="X.X.X"
+					bind:value={$formData.patch}
+					onFocus={showPatchSuggestions}
+				/>
 			{/snippet}
 		</Control>
 		<FieldErrors />

@@ -108,11 +108,11 @@ export const fuseSchema = z.enum(FUSE);
 // 	})
 // 	.prefault({ url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' });
 
-const getSchemas = (hackyDefaultEnums = false) => {
+const getSchemas = (addDefaults = false) => {
 	// to make super forms not auto pick an enum field we need to chop up the schema a bit
 	// https://superforms.rocks/default-values#enums-and-group-inputs
 
-	const defaultEnum = hackyDefaultEnums
+	const defaultEnum = addDefaults
 		? <EnumVals extends z.util.EnumLike, T extends z.ZodEnum<EnumVals>>(x: T) => {
 				// eslint-disable-next-line @typescript-eslint/no-explicit-any
 				return x.default('' as any);
@@ -151,8 +151,10 @@ const getSchemas = (hackyDefaultEnums = false) => {
 		right: matchSideSchema,
 		patch: z
 			.string()
+			.trim()
 			.regex(/^\d+(?:\.\d+)*$/, { message: 'Patch must be digits separated by dots' })
 			.optional()
+			.default('')
 	});
 
 	return {

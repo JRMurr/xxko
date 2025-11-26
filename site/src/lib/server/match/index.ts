@@ -174,6 +174,8 @@ export const createMatch = (db: xxDatabase, matchInfo: z.infer<typeof matchSchem
 
 			const { videoId, startSec, videoInfo } = await resolveVideoForMatch(tx, matchInfo.video);
 
+			const patch = matchInfo.patch && matchInfo.patch.length > 0 ? matchInfo.patch : undefined;
+
 			const leftSideId = await upsertMatchSide(tx, matchInfo.left);
 			const rightSideId = await upsertMatchSide(tx, matchInfo.right);
 
@@ -185,7 +187,8 @@ export const createMatch = (db: xxDatabase, matchInfo: z.infer<typeof matchSchem
 							leftSideId,
 							rightSideId,
 							videoId,
-							startSec
+							startSec,
+							patch
 						})
 						.returning({ matchId: match.id });
 					return matchId;
@@ -212,17 +215,20 @@ export const updateMatch = (db: xxDatabase, matchId: number, matchInfo: z.infer<
 					id: match.id,
 					videoId: match.videoId,
 					leftSideId: match.leftSideId,
-					rightSideId: match.rightSideId
+					rightSideId: match.rightSideId,
+					patch: match.patch
 				})
 				.from(match)
 				.where(eq(match.id, matchId))
-				.limit(1);
+				.get();
 
-			if (existing.length === 0) {
+			if (!existing) {
 				throw new Error(`Match with id ${matchId} not found`);
 			}
 
-			const { leftSideId, rightSideId } = existing[0];
+			const patch = matchInfo.patch && matchInfo.patch.length > 0 ? matchInfo.patch : existing.patch;
+
+			const { leftSideId, rightSideId } = existing;
 
 			const { videoId, startSec, videoInfo } = await resolveVideoForMatch(tx, matchInfo.video);
 
@@ -237,9 +243,10 @@ export const updateMatch = (db: xxDatabase, matchId: number, matchInfo: z.infer<
 						.update(match)
 						.set({
 							videoId,
-							startSec
+							startSec,
+							patch
 							// Thread more fields from matchInfo here if/when you persist them:
-							// title, context, notes, patch, etc.
+							// title, context, notes, etc.
 						})
 						.where(eq(match.id, matchId));
 
