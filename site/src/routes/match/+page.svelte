@@ -4,7 +4,6 @@
 	import PaginationNav from 'flowbite-svelte/PaginationNav.svelte';
 	import { ArrowLeftOutline, ArrowRightOutline } from 'flowbite-svelte-icons';
 	import { page } from '$app/state';
-	import { browser } from '$app/environment';
 
 	const initialPage = Number(page.url.searchParams.get('page')) || 1;
 	let currentPage = $state(initialPage);
