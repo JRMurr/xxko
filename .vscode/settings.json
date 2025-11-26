@@ -1,21 +1,29 @@
 {
-	"cSpell.words": [
-		"Ahri",
-		"Blitzcrank",
-		"Braum",
-		"Ekko",
-		"formsnap",
-		"Illaoi",
-		"libsql",
-		"litestream",
-		"prefault",
-		"socialmedia",
-		"superforms",
-		"Teemo",
-		"xxko",
-		"Yasuo",
-		"youtu",
-		"zocker"
-	],
-	"eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "svelte"]
+  "cSpell.words": [
+    "Ahri",
+    "Blitzcrank",
+    "Braum",
+    "Ekko",
+    "formsnap",
+    "Illaoi",
+    "libsql",
+    "litestream",
+    "prefault",
+    "socialmedia",
+    "superforms",
+    "Teemo",
+    "xxko",
+    "Yasuo",
+    "youtu",
+    "zocker"
+  ],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "svelte"
+  ],
+"prettier.configPath": "site/.prettierrc",
+"prettier.requireConfig": true
 }
