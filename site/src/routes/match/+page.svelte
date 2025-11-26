@@ -4,6 +4,7 @@
 	import PaginationNav from 'flowbite-svelte/PaginationNav.svelte';
 	import { ArrowLeftOutline, ArrowRightOutline } from 'flowbite-svelte-icons';
 	import { page } from '$app/state';
+	import { browser } from '$app/environment';
 
 	const initialPage = Number(page.url.searchParams.get('page')) || 1;
 	let currentPage = $state(initialPage);
@@ -20,7 +21,7 @@
 </script>
 
 <div class="mx-auto w-full max-w-5xl px-3 sm:w-11/12 md:w-5/6 lg:w-2/3 xl:w-3/5 2xl:w-1/2">
-	<div class="flex flex-col gap-4 pt-2 pb-2 md:flex-row">
+	<div class="flex flex-col gap-4 pb-2 pt-2 md:flex-row">
 		<aside class="md:sticky md:top-4 md:w-64 md:shrink-0">
 			<MatchFilter bind:pageNum={currentPage} />
 		</aside>
@@ -41,21 +42,24 @@
 							<span class="font-semibold text-gray-900 dark:text-white">{totalMatches}</span>
 							Matches
 						</div>
-						<PaginationNav
-							layout="navigation"
-							size="large"
-							class="flex justify-center"
-							{currentPage}
-							{totalPages}
-							onPageChange={handlePageChange}
-						>
-							{#snippet prevContent()}
-								<ArrowLeftOutline class="h-5 w-5" />
-							{/snippet}
-							{#snippet nextContent()}
-								<ArrowRightOutline class="h-5 w-5" />
-							{/snippet}
-						</PaginationNav>
+						<!-- TODO: not sure why this gives a weird hydration error but i dont want to re-invent it.. -->
+						{#if browser}
+							<PaginationNav
+								layout="navigation"
+								size="large"
+								class="flex justify-center"
+								{currentPage}
+								{totalPages}
+								onPageChange={handlePageChange}
+							>
+								{#snippet prevContent()}
+									<ArrowLeftOutline class="h-5 w-5" />
+								{/snippet}
+								{#snippet nextContent()}
+									<ArrowRightOutline class="h-5 w-5" />
+								{/snippet}
+							</PaginationNav>
+						{/if}
 					</div>
 				</div>
 			</div>
