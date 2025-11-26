@@ -24,6 +24,9 @@
     "typescriptreact",
     "svelte"
   ],
-"prettier.configPath": "site/.prettierrc",
-"prettier.requireConfig": true
+// "prettier.configPath": "site/.prettierrc",
+"prettier.requireConfig": true,
+// "prettier.useEditorConfig": false,
+"prettier.prettierPath": "site/node_modules/prettier",
+"prettier.enableDebugLogs": true
 }
