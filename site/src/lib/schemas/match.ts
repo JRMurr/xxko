@@ -148,16 +148,14 @@ const getSchemas = (hackyDefaultEnums = false) => {
 	const matchSchema = z.object({
 		video: videoSchema,
 		left: matchSideSchema,
-		right: matchSideSchema
-	});
-
-	const matchUpdateSchema = z.object({
-		matchId: z.number(),
-		matchInfo: matchSchema
+		right: matchSideSchema,
+		patch: z
+			.string()
+			.regex(/^\d+(?:\.\d+)*$/, { message: 'Patch must be digits separated by dots' })
+			.optional()
 	});
 
 	return {
-		matchUpdateSchema,
 		teamSchema,
 		matchSideSchema,
 		videoSchema,
@@ -165,7 +163,7 @@ const getSchemas = (hackyDefaultEnums = false) => {
 	};
 };
 
-export const { teamSchema, matchSideSchema, videoSchema, matchSchema, matchUpdateSchema } = getSchemas();
+export const { teamSchema, matchSideSchema, videoSchema, matchSchema } = getSchemas();
 
 export const { matchSchema: uiDefaultedMatchSchema } = getSchemas(true);
 

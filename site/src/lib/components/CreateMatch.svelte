@@ -52,6 +52,16 @@
 		<FieldErrors />
 	</Field>
 
+	<Field {form} name="patch">
+		<Control>
+			{#snippet children({ props })}
+				<Label>Patch (optional)</Label>
+				<Input {...props} placeholder="X.X.X" bind:value={$formData.patch} />
+			{/snippet}
+		</Control>
+		<FieldErrors />
+	</Field>
+
 	<!-- Left / Right side-by-side on md+ -->
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 		{#each MATCH_SIDE as side (side)}
