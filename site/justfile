@@ -2,7 +2,7 @@
 #   just --list
 
 dev:
-  npm run db:migrate && npm run dev -- --open
+  npm run dev -- --open
 
 format:
   npm run format
